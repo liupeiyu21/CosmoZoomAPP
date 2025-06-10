@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -12,6 +12,40 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+
+const allPlanets = [
+  'mercury', 'venus', 'earth', 'mars', 'jupiter',
+  'saturn', 'uranus', 'neptune', 'pluto', 'moon', 'sun'
+];
+
+const planetNameMap: Record<string, string> = {
+  mercury: '水星',
+  venus: '金星',
+  earth: '地球',
+  mars: '火星',
+  jupiter: '木星',
+  saturn: '土星',
+  uranus: '天王星',
+  neptune: '海王星',
+  pluto: '冥王星',
+  moon: '月',
+  sun: '太陽',
+};
+
+const planetImageMap: Record<string, any> = {
+  mercury: require('../../assets/planets/mercury.png'),
+  venus: require('../../assets/planets/venus.png'),
+  earth: require('../../assets/planets/earth.png'),
+  mars: require('../../assets/planets/mars.png'),
+  jupiter: require('../../assets/planets/jupiter.png'),
+  saturn: require('../../assets/planets/saturn.png'),
+  uranus: require('../../assets/planets/uranus.png'),
+  neptune: require('../../assets/planets/neptune.png'),
+  pluto: require('../../assets/planets/pluton.png'),
+  moon: require('../../assets/planets/moon.png'),
+  sun: require('../../assets/planets/sun.png'),
+};
 
 export default function MyPage() {
   const [nickname, setNickname] = useState('');
@@ -19,20 +53,30 @@ export default function MyPage() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [editNick, setEditNick] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
-
+  const [orderedGallery, setOrderedGallery] = useState<string[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-    const loadData = async () => {
-      const savedName = await AsyncStorage.getItem('nickname');
-      const savedEmail = await AsyncStorage.getItem('email');
-      const savedImage = await AsyncStorage.getItem('imageUri');
-      if (savedName) setNickname(savedName);
-      if (savedEmail) setEmail(savedEmail);
-      if (savedImage) setImageUri(savedImage);
-    };
-    loadData();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadData = async () => {
+        const savedName = await AsyncStorage.getItem('nickname');
+        const savedEmail = await AsyncStorage.getItem('email');
+        const savedImage = await AsyncStorage.getItem('imageUri');
+        const savedGallery = await AsyncStorage.getItem('gallery');
+
+        if (savedName) setNickname(savedName);
+        if (savedEmail) setEmail(savedEmail);
+        if (savedImage) setImageUri(savedImage);
+
+        const gallery = savedGallery ? JSON.parse(savedGallery) : [];
+        const remaining = allPlanets.filter(p => !gallery.includes(p));
+        const withPlaceholders = [...gallery, ...Array(remaining.length).fill('unknown')];
+        setOrderedGallery(withPlaceholders);
+      };
+
+      loadData();
+    }, [])
+  );
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -81,6 +125,17 @@ export default function MyPage() {
             <Text style={styles.avatarHint}>タップして変更</Text>
           </View>
 
+          <TouchableOpacity
+            style={[styles.greenButton, { backgroundColor: '#ff4444' }]}
+            onPress={async () => {
+              await AsyncStorage.removeItem('gallery');
+              setOrderedGallery([]);
+              alert('リセット完了！🌍');
+            }}
+          >
+            <Text style={[styles.greenText, { color: '#fff' }]}>ギャラリーをリセット</Text>
+          </TouchableOpacity>
+
           <View style={styles.infoBox}>
             {editNick ? (
               <>
@@ -127,8 +182,21 @@ export default function MyPage() {
 
         <Text style={styles.sectionTitle}>惑星写真ホルダー</Text>
         <View style={styles.photoGrid}>
-          {[...Array(12)].map((_, i) => (
-            <View key={i} style={styles.photoBox} />
+          {orderedGallery.map((planet, index) => (
+            <View key={index} style={styles.photoBox}>
+              {planet === 'unknown' ? (
+                <View style={styles.unknownBox}>
+                  <Text style={styles.unknownText}>
+                    ここにはどんな{'\n'}惑星が入るかな
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Image source={planetImageMap[planet]} style={styles.planetImage} />
+                  <Text style={styles.planetName}>{planetNameMap[planet]}</Text>
+                </>
+              )}
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -143,6 +211,7 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 20,
+    paddingBottom: 40,
   },
   backButton: {
     alignSelf: 'flex-end',
@@ -215,13 +284,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 10,
+    rowGap: 24,
   },
   photoBox: {
-    width: '30%',
-    aspectRatio: 1,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 6,
+    width: '18%',
+    alignItems: 'center',
     marginBottom: 10,
+  },
+  planetImage: {
+    width: 80,
+    height: 80,
+    resizeMode: 'contain',
+  },
+  planetName: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    textAlign: 'center',
+  },
+  unknownBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  unknownText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
