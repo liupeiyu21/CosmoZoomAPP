@@ -1,9 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import planetImages from '../constants/planetAssets';
-
 
 export default function PrizeScreen() {
   const router = useRouter();
@@ -12,14 +18,14 @@ export default function PrizeScreen() {
 
   useEffect(() => {
     if (planet && typeof planet === 'string') {
-      const capitalizedPlanet = planet.charAt(0).toUpperCase() + planet.slice(1).toLowerCase();
-      const planetImageList = planetImages[capitalizedPlanet];
+      const planetKey = planet.toLowerCase();
+      const imageList = planetImages[planetKey];
 
-      if (planetImageList && planetImageList.length > 0) {
-        const randomIndex = Math.floor(Math.random() * planetImageList.length);
-        const selected = planetImageList[randomIndex];
+      if (imageList && imageList.length > 0) {
+        const randomIndex = Math.floor(Math.random() * imageList.length);
+        const selected = imageList[randomIndex];
         setSelectedImage(selected);
-        saveToGallery(capitalizedPlanet, randomIndex);
+        saveToGallery(planetKey, randomIndex);
       }
     }
   }, [planet]);
@@ -33,21 +39,45 @@ export default function PrizeScreen() {
       if (!gallery.includes(key)) {
         gallery.push(key);
         await AsyncStorage.setItem('gallery', JSON.stringify(gallery));
+        console.log(`✅ Saved: ${key}`);
+      } else {
+        console.log(`ℹ️ Already exists: ${key}`);
       }
     } catch (e) {
-      console.log('Error saving to gallery:', e);
+      console.log('❌ Error saving to gallery:', e);
     }
   };
 
+  // РОЗКОМЕНТУЙ ЦЕ ДЛЯ ТЕСТУ, щоб очистити всю галерею
+  /*
+  useEffect(() => {
+    const clearCache = async () => {
+      await AsyncStorage.clear();
+      console.log('🧹 AsyncStorage cleared');
+    };
+    clearCache();
+  }, []);
+  */
+
   return (
-    <ImageBackground source={require('../../assets/background-1.png')} style={styles.background}>
+    <ImageBackground
+      source={require('../../assets/background-1.png')}
+      style={styles.background}
+    >
       <View style={styles.container}>
         <Text style={styles.title}>おめでとう！全問正解！！</Text>
-        {selectedImage && <Image source={selectedImage} style={styles.planet} />}
+
+        {selectedImage && (
+          <Image source={selectedImage} style={styles.planet} />
+        )}
+
         <Text style={styles.subtitle}>君だけの惑星写真を手に入れたよ！</Text>
         <Text style={styles.note}>マイページの写真ホルダーに保存したよ</Text>
 
-        <TouchableOpacity style={styles.button} onPress={() => router.replace('/(tabs)/mypage')}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.replace('/(tabs)/mypage')}
+        >
           <Text style={styles.buttonText}>MyPageに戻る</Text>
         </TouchableOpacity>
       </View>
@@ -74,12 +104,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 25,
-    color: '#000000',
+    color: '#000',
     marginTop: 20,
   },
   note: {
-    fontSize: 20,
-    color: '#000000',
+    fontSize: 18,
+    color: '#000',
     marginTop: 4,
   },
   planet: {

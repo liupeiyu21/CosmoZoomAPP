@@ -4,11 +4,13 @@ import { useRouter } from 'expo-router';
 export default function QuizTest() {
   const router = useRouter();
 
+  const planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>テストクイズ画面</Text>
 
-      {['mercury', 'venus', 'earth', 'mars'].map((planet) => (
+      {planets.map((planet) => (
         <TouchableOpacity
           key={planet}
           style={styles.button}
@@ -27,18 +29,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#111',
+    padding: 20,
   },
   title: {
     fontSize: 24,
     color: '#fff',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   button: {
     backgroundColor: '#2B31A4',
-    padding: 10,
+    padding: 12,
     borderRadius: 10,
-    marginBottom: 10,
-    width: 200,
+    marginBottom: 12,
+    width: 220,
     alignItems: 'center',
   },
   buttonText: {
