@@ -48,17 +48,6 @@ export default function PrizeScreen() {
     }
   };
 
-  // РОЗКОМЕНТУЙ ЦЕ ДЛЯ ТЕСТУ, щоб очистити всю галерею
-  /*
-  useEffect(() => {
-    const clearCache = async () => {
-      await AsyncStorage.clear();
-      console.log('🧹 AsyncStorage cleared');
-    };
-    clearCache();
-  }, []);
-  */
-
   return (
     <ImageBackground
       source={require('../../assets/background-1.png')}
