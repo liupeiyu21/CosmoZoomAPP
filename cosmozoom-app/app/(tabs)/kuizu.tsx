@@ -304,13 +304,21 @@ export default function KuizuScreen() {
   }, []);
 
   // クイズ終了時に全問正解していれば惑星をクリア済みにする
-  useEffect(() => {
-    if (isQuizFinished && shuffledQuiz) {
-      if (correctCount === shuffledQuiz.questions.length && shuffledQuiz.id === nextPlanet) {
-        setClearedPlanets((prev) => [...prev, shuffledQuiz.id]);
-      }
+ useEffect(() => {
+  if (isQuizFinished && shuffledQuiz) {
+    const passedAll = correctCount === shuffledQuiz.questions.length;
+    const currentPlanet = shuffledQuiz.id;
+
+    if (passedAll && currentPlanet === nextPlanet) {
+      setClearedPlanets((prev) => [...prev, currentPlanet]);
+      router.push({
+        pathname: '/PrizeScreen',
+        params: { planet: currentPlanet }
+      });
     }
-  }, [isQuizFinished, correctCount, shuffledQuiz, nextPlanet]);
+  }
+}, [isQuizFinished, correctCount, shuffledQuiz, nextPlanet]);
+
 
 
   const dotStyles = [...Array(DOT_COUNT)].map((_, i) => {
