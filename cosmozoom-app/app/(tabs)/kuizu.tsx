@@ -387,7 +387,12 @@ const handlePlanetPress = (planetId: string) => {
           style={styles.background}
           resizeMode="cover"
         >
-          <Text style={styles.title}>マイページ</Text>
+        <Pressable
+  style={styles.mypageButtonAbsolute}
+  onPress={() => router.push('/mypage')}
+>
+  <Text style={styles.greenText}>マイページへ</Text>
+</Pressable>
 
           <Pressable onPress={() => router.push('/')} style={styles.button}>
             <Text style={styles.buttonText}>ホームへ戻る</Text>
@@ -471,6 +476,21 @@ const handlePlanetPress = (planetId: string) => {
 }
 
 const styles = StyleSheet.create({
+mypageButtonAbsolute: {
+  position: 'absolute',
+  top: '5%',
+  right: '5%',
+  backgroundColor: '#00FF2B',
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 10,
+  zIndex: 10,
+},
+greenText: {
+  color: '#000',
+  fontWeight: 'bold',
+},
+
   container: {
     flex: 1,
     backgroundColor: 'black',
@@ -505,21 +525,23 @@ const styles = StyleSheet.create({
     right: '5%',
     zIndex: 2,
   },
-  button: {
-    backgroundColor: '#C94D89',
-    padding: 10,
-    width: 150,
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: '5%',
-    right: '5%',
-    zIndex: 2,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+ button: {
+  backgroundColor: '#C94D89',
+  paddingVertical: 6,
+  paddingHorizontal: 12,
+  borderRadius: 10,
+  alignItems: 'center',
+  position: 'absolute',
+  bottom: '5%',
+  right: '5%',
+  zIndex: 2,
+},
+buttonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
   list: {
     padding: 100,
     justifyContent: 'center',
