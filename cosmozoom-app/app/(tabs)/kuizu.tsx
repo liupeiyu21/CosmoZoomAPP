@@ -256,8 +256,8 @@ const taiyoukei = [
   { id: 'venus', name: '金星/venus', img: require('../../assets/images/kinsei.png'), clickable: true,       initialPos: { top: '42%', left: '78%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.09) / 2 }}, 
   { id: 'earth', name: '地球/earth', img: require('../../assets/images/tikyuu.png'), clickable: true,       initialPos: { top: '49%', left: '70%' },  size: { width: width * 0.063, height: width * 0.063, borderRadius: (width * 0.11) / 2 }}, 
   { id: 'mars', name: '火星/mars', img: require('../../assets/images/kasei.png'), clickable: true,          initialPos: { top: '53%', left: '60%' },  size: { width: width * 0.04, height: width * 0.04, borderRadius: (width * 0.09) / 2 } }, 
-  { id: 'jupiter', name: '木星/jupiter', img: require('../../assets/images/mokusei.png'), clickable: true,  initialPos: { top: '50%', left: '50%' }, size: { width: width * 0.074, height: width * 0.074, borderRadius: (width * 0.25) / 2 } }, 
-  { id: 'saturn', name: '土星/saturn', img: require('../../assets/images/dosei.png'), clickable: true,      initialPos: { top: '58%', left: '40%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.6) / 2 }  }, 
+  { id: 'jupiter', name: '木星/jupiter', img: require('../../assets/images/mokusei.png'), clickable: true,  initialPos: { top: '50%', left: '48%' }, size: { width: width * 0.074, height: width * 0.074, borderRadius: (width * 0.25) / 2 } }, 
+  { id: 'saturn', name: '土星/saturn', img: require('../../assets/images/dosei.png'), clickable: true,      initialPos: { top: '60%', left: '37%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.6) / 2 }  }, 
   { id: 'uranus', name: '天王星/uranus', img: require('../../assets/images/tennousei.png'), clickable: true, initialPos: { top: '65%', left: '25%' },  size: { width: width * 0.024, height: width * 0.024, borderRadius: (width * 0.12) / 2 } }, 
   { id: 'neptune', name: '海王星/neptune', img: require('../../assets/images/kaiousei.png'), clickable: true,initialPos: { top: '67%', left: '15%' }, size: { width: width * 0.025, height: width * 0.025, borderRadius: (width * 0.12) / 2 }}, 
 ];
