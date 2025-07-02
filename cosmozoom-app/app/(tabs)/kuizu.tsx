@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Dimensions, FlatList, Image, ImageBackground, Pressable, StyleSheet, Text, View, } from 'react-native';
+import { Alert, Dimensions, Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, } from 'react-native-reanimated';
 const { width, height } = Dimensions.get('window');
 const DOT_COUNT = 12;
@@ -249,24 +249,23 @@ const wakusei_kuizu = [
   },
 ];
 
-const shuffleArray = (array: any[]) => {
-  return [...array].sort(() => Math.random() - 0.5);
-};
 
 const taiyoukei = [
-  { id: 'sun', name: '太陽/sun', img: require('../../assets/images/taiyou.png'), clickable: false },
-  { id: 'mercury', name: '水星/mercury', img: require('../../assets/images/suisei.png'), clickable: true },
-  { id: 'venus', name: '金星/venus', img: require('../../assets/images/kinsei.png'), clickable: true },
-  { id: 'earth', name: '地球/earth', img: require('../../assets/images/tikyuu.png'), clickable: true },
-  { id: 'mars', name: '火星/mars', img: require('../../assets/images/kasei.png'), clickable: true },
-  { id: 'jupiter', name: '木星/jupiter', img: require('../../assets/images/mokusei.png'), clickable: true },
-  { id: 'saturn', name: '土星/saturn', img: require('../../assets/images/dosei.png'), clickable: true },
-  { id: 'uranus', name: '天王星/uranus', img: require('../../assets/images/tennousei.png'), clickable: true },
-  { id: 'neptune', name: '海王星/neptune', img: require('../../assets/images/kaiousei.png'), clickable: true },
+  { id: 'sun', name: '太陽/sun', img: require('../../assets/images/taiyou.png'), clickable: false, initialPos: { top: '15%', left: '45%' }, size: { width: width * 0.15, height: width * 0.15, borderRadius: (width * 0.4) / 2 } }, 
+  { id: 'mercury', name: '水星/mercury', img: require('../../assets/images/suisei.png'), clickable: true ,  initialPos: { top: '35%', left: '85%' },  size: { width: width * 0.03, height: width * 0.03, borderRadius: (width * 0.07) / 2 }},
+  { id: 'venus', name: '金星/venus', img: require('../../assets/images/kinsei.png'), clickable: true,       initialPos: { top: '42%', left: '78%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.09) / 2 }}, 
+  { id: 'earth', name: '地球/earth', img: require('../../assets/images/tikyuu.png'), clickable: true,       initialPos: { top: '49%', left: '70%' },  size: { width: width * 0.063, height: width * 0.063, borderRadius: (width * 0.11) / 2 }}, 
+  { id: 'mars', name: '火星/mars', img: require('../../assets/images/kasei.png'), clickable: true,          initialPos: { top: '53%', left: '60%' },  size: { width: width * 0.04, height: width * 0.04, borderRadius: (width * 0.09) / 2 } }, 
+  { id: 'jupiter', name: '木星/jupiter', img: require('../../assets/images/mokusei.png'), clickable: true,  initialPos: { top: '50%', left: '50%' }, size: { width: width * 0.074, height: width * 0.074, borderRadius: (width * 0.25) / 2 } }, 
+  { id: 'saturn', name: '土星/saturn', img: require('../../assets/images/dosei.png'), clickable: true,      initialPos: { top: '58%', left: '40%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.6) / 2 }  }, 
+  { id: 'uranus', name: '天王星/uranus', img: require('../../assets/images/tennousei.png'), clickable: true, initialPos: { top: '65%', left: '25%' },  size: { width: width * 0.024, height: width * 0.024, borderRadius: (width * 0.12) / 2 } }, 
+  { id: 'neptune', name: '海王星/neptune', img: require('../../assets/images/kaiousei.png'), clickable: true,initialPos: { top: '67%', left: '15%' }, size: { width: width * 0.025, height: width * 0.025, borderRadius: (width * 0.12) / 2 }}, 
 ];
 
 
-
+const shuffleArray = <T,>(array: T[]): T[] => {
+  return [...array].sort(() => Math.random() - 0.5);
+};
 
 
 
@@ -339,7 +338,11 @@ const handlePlanetPress = (planetId: string) => {
 
   const selectedQuizData = wakusei_kuizu.find((quiz) => quiz.id === planetId);
   if (selectedQuizData) {
-    const shuffledQuestions = shuffleArray(selectedQuizData.questions).slice(0, 4);
+    const shuffledQuestions = shuffleArray(selectedQuizData.questions).slice(0, 4)
+    .map((q) => ({
+        ...q,
+        options: shuffleArray(q.options), 
+      }));
     setShuffledQuiz({ id: planetId, questions: shuffledQuestions });
     setCurrentQuestionIndex(0);
     setCorrectCount(0);
@@ -387,7 +390,7 @@ const handlePlanetPress = (planetId: string) => {
           style={styles.background}
           resizeMode="cover"
         >
-          <Text style={styles.title}>マイページ</Text>
+          <Text style={styles.title}>マイ<br/>ページ</Text>
 
           <Pressable onPress={() => router.push('/')} style={styles.button}>
             <Text style={styles.buttonText}>ホームへ戻る</Text>
@@ -395,36 +398,52 @@ const handlePlanetPress = (planetId: string) => {
 
           {!showQuiz && (
             <>
-              <FlatList
-                data={taiyoukei}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.list}
-                renderItem={({ item }) => {
-                  const cleared = clearedPlanets.includes(item.id); // この惑星はクリア済みか
-                  const isSun = item.id === 'sun'; // この惑星は太陽か
-                  const isClickableNext = item.id === nextPlanet && item.clickable; // 次に挑戦すべき惑星でクリック可能か
 
-                  return (
-                    <Pressable
-                     onPress={() => {
-                     if (item.clickable && (cleared || isClickableNext)) {
-                     handlePlanetPress(item.id);
+              <View style={styles.planetsContainer}>
+              {taiyoukei.map((item) => {
+                const cleared = clearedPlanets.includes(item.id);
+                const isSun = item.id === 'sun';
+                const isClickableNext = item.id === nextPlanet && item.clickable;
+
+                return (
+                  <Pressable
+                    key={item.id} // FlatListのkeyExtractorの代わりに直接keyプロパティを設定
+                    onPress={() => {
+                      if (item.clickable && (cleared || isClickableNext)) {
+                        handlePlanetPress(item.id);
                       } else if (item.clickable && !cleared && !isClickableNext) {
-                      Alert.alert("この惑星には挑戦できないよ！！", `「${nextPlanet}」に挑戦しよう！`);
+                        Alert.alert("この惑星には挑戦できないよ！！", `${nextPlanet}に挑戦しよう！`);
                       }
-                       }}
-                       style={styles.item}
-                     >
-                     {isSun || cleared ? (
-                     <Image source={item.img} style={styles.waku_image} />
+                    }}
+                    // 各惑星にinitialPosと共通スタイルを適用。太陽だけサイズを上書き。
+                    style={[
+                      styles.absolutePlanetItem,
+                      { top: item.initialPos.top, left: item.initialPos.left }
+                    ]} >
+                    {/* 太陽またはクリア済みの惑星なら画像、それ以外はマスク */}
+                    {isSun || cleared ? (
+                      <Image
+                        source={item.img}
+                        style={[
+                          styles.waku_image,
+                          item.size ? { width: item.size.width, height: item.size.height, borderRadius: item.size.borderRadius } : {},
+                        ]}
+                      />
                     ) : (
-                      <View style={[styles.waku_image, styles.blackout]} />
-                     )}
-                     <Text style={styles.label}>{item.name}</Text>
-                   </Pressable>
-                  );
-                }}
-              />
+                      <View
+                        style={[
+                          styles.waku_image,
+                          styles.blackout,
+                          item.size ? { width: item.size.width, height: item.size.height, borderRadius: item.size.borderRadius } : {},
+                        ]}/>)}
+                    <Text style={styles.label}>{item.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+
+
               <Text style={styles.centerText}>次は {nextPlanet} に挑戦しよう！</Text>
             </>
           )}
@@ -442,7 +461,7 @@ const handlePlanetPress = (planetId: string) => {
                   ) : (
                     <Text style={styles.quizResultText}>残念！もう一回チャレンジしよう！</Text>
                   )}
-                 <Pressable onPress={handleCloseQuiz} style={styles.retryButton}>
+                 <Pressable onPress={() => handleCloseQuiz()} style={styles.retryButton}>
                    <Text style={styles.retryButtonText}>クイズページへ</Text>
                  </Pressable>
                 </>
@@ -520,14 +539,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  list: {
-    padding: 100,
-    justifyContent: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+
+
+   //----------------------------------太陽系を動かせるところ-----------------------------
+    planetsContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
   },
-  item: { alignItems: 'center', margin: 10 },
-  waku_image: {
+    absolutePlanetItem: {
+    position: 'absolute',
+    alignItems: 'center',
+  },
+  waku_image: { // これが追加されています
     width: 80,
     height: 80,
     resizeMode: 'contain',
@@ -541,14 +567,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 14,
     color: 'white',
-  },
+  },    
+
+
   centerText: {
     color: 'white',
+    backgroundColor:"#512C8B",
     fontSize: 24,
-    marginTop: 20,
+    padding:12,
+    borderRadius:10,
     textAlign: 'center',
     position: 'absolute',
-    bottom: '20%',
+    top:40,
   },
   quizModal: {
     position: 'absolute',
@@ -560,7 +590,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
     padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.7)',
   },
   question: {
     color: 'white',
@@ -612,5 +641,18 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+    scrollContainer: {
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  planetWrapper: {
+    marginHorizontal: 20,
+    position: 'relative',
+  },
+  planet: {
+    width: 80,
+    height: 80,
+    resizeMode: 'contain',
   },
 });
