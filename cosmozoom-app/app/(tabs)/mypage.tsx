@@ -8,12 +8,23 @@ import {
   TextInput,
   Image,
   ImageBackground,
+  Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import planetAssets from '../constants/planetAssets';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { Pressable } from 'react-native';
+
+
+
+const { width } = Dimensions.get('window');
 
 const allPlanets = [
   'mercury', 'venus', 'earth', 'mars', 'jupiter',
@@ -58,7 +69,12 @@ export default function MyPage() {
         const gallery = savedGallery ? JSON.parse(savedGallery) : [];
         const planetBaseKeys = gallery.map((g: string) => g.split('_')[0]);
         const remaining = allPlanets.filter(p => !planetBaseKeys.includes(p));
-        const withPlaceholders = [...gallery, ...Array(remaining.length).fill('unknown')];
+        const totalSlots = 15;
+const withPlaceholders = [
+  ...gallery,
+  ...Array(Math.max(0, totalSlots - gallery.length)).fill('unknown'),
+];
+
         setOrderedGallery(withPlaceholders);
       };
 
@@ -95,14 +111,15 @@ export default function MyPage() {
     <ImageBackground
       source={require('../../assets/background.png')}
       style={styles.background}
+      resizeMode="cover"
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backText}>ホームへ戻る</Text>
         </TouchableOpacity>
 
         <View style={styles.profileBox}>
-          <View style={{ alignItems: 'center', marginRight: 16 }}>
+          <View style={styles.avatarWrapper}>
             <TouchableOpacity onPress={pickImage}>
               {imageUri ? (
                 <Image source={{ uri: imageUri }} style={styles.avatar} />
@@ -121,7 +138,7 @@ export default function MyPage() {
               alert('リセット完了！🌍');
             }}
           >
-            <Text style={[styles.greenText, { color: '#fff' }]}>ギャラリーをリセット</Text>
+            <Text style={styles.greenText}>ギャラリーをリセット</Text>
           </TouchableOpacity>
 
           <View style={styles.infoBox}>
@@ -188,6 +205,7 @@ export default function MyPage() {
             const image = planetAssets[planetName]?.[imgIndex];
 
             return (
+              
               <View key={index} style={styles.photoBox}>
                 {image ? (
                   <>
@@ -211,11 +229,13 @@ export default function MyPage() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
+    width: '100%',
+    height: '100%',
   },
-  container: {
+  scrollContainer: {
     padding: 20,
     paddingBottom: 40,
+    flexGrow: 1,
   },
   backButton: {
     alignSelf: 'flex-end',
@@ -232,7 +252,12 @@ const styles = StyleSheet.create({
   profileBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    flexWrap: 'wrap',
     marginBottom: 20,
+  },
+  avatarWrapper: {
+    alignItems: 'center',
+    marginRight: 16,
   },
   avatar: {
     width: 100,
@@ -251,6 +276,7 @@ const styles = StyleSheet.create({
   infoBox: {
     flex: 1,
     paddingLeft: 10,
+    minWidth: 250,
   },
   label: {
     fontWeight: 'bold',
@@ -276,8 +302,7 @@ const styles = StyleSheet.create({
     padding: 6,
     marginBottom: 6,
     borderRadius: 6,
-    width: 250,
-    maxWidth: '100%',
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 16,
@@ -285,31 +310,39 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   photoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 24,
-  },
-  photoBox: {
-    width: '18%',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  planetImage: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
-  },
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+  rowGap: 48,
+},
+
+photoBox: {
+  width: `${100 / 5 - 2}%`, // приблизно 18% для 5 в ряд
+  aspectRatio: 1,
+  alignItems: 'center',
+},
+
+planetImage: {
+  width: '100%',
+  height: '100%',
+  borderRadius: 12,
+  resizeMode: 'cover',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  elevation: 6,
+},
   planetName: {
     marginTop: 6,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 19,
+    fontWeight: 'bold',
     color: '#000',
     textAlign: 'center',
   },
   unknownBox: {
-    width: 80,
-    height: 80,
+    width: '100%',
+    aspectRatio: 1,
     borderRadius: 12,
     backgroundColor: '#000',
     justifyContent: 'center',
