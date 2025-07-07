@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, Image, StyleSheet, Dimensions } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  ImageBackground,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -38,17 +43,8 @@ export default function LoadingScreen() {
       const x = orbitRadius * Math.cos(angle);
       const y = orbitRadius * Math.sin(angle);
 
-      const scale = interpolate(
-        Math.sin(angle),
-        [-1, 0, 1],
-        [0.6, 1.2, 0.6]
-      );
-
-      const opacity = interpolate(
-        Math.sin(angle),
-        [-1, 0, 1],
-        [0.4, 1, 0.4]
-      );
+      const scale = interpolate(Math.sin(angle), [-1, 0, 1], [0.6, 1.2, 0.6]);
+      const opacity = interpolate(Math.sin(angle), [-1, 0, 1], [0.4, 1, 0.4]);
 
       return {
         position: 'absolute',
@@ -71,12 +67,12 @@ export default function LoadingScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={require('../../assets/images/login_background.png')}
-        style={styles.background}
-      />
-      {/* 軌道の円 */}
+    <ImageBackground
+      source={require('../../assets/images/login_background.png')}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      {/* 軌道の白い円 */}
       <View
         style={[
           styles.orbitCircle,
@@ -89,21 +85,19 @@ export default function LoadingScreen() {
           },
         ]}
       />
+
       {/* 惑星たち */}
       <View style={styles.centerContainer}>
         {planets.map(renderPlanet)}
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: 'black',
-    },
     background: {
-      ...StyleSheet.absoluteFillObject,
-      resizeMode: 'cover',
+      flex: 1,
+      width: '100%',
+      height: '100%',
     },
     centerContainer: {
       flex: 1,
