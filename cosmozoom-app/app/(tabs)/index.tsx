@@ -172,11 +172,12 @@ export default function HomeScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
-        <Image
-          source={require("../../assets/images/space_bg.png")}
-          style={StyleSheet.absoluteFill}
-          resizeMode="cover"
-        />
+    <Image
+      source={require('../../assets/images/space_bg.png')}
+      style={{ position: 'absolute', top: 0, left: 0, width: width, height: height }}
+      resizeMode="cover"
+    />
+
 
         <TouchableOpacity style={styles.myPageButton}>
           <Text style={styles.myPageText}>マイページ</Text>
