@@ -56,10 +56,10 @@ export default function FailScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: {
+    background: {
     flex: 1,
-    resizeMode: 'cover',
-    padding: 20,
+    width: '100%',
+    height: '100%',
   },
   container: {
     flex: 1,

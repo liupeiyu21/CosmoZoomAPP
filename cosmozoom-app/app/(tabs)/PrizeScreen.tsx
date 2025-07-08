@@ -57,12 +57,24 @@ export default function PrizeScreen() {
       style={styles.background}
       resizeMode="cover"
     >
+      <TouchableOpacity
+        style={styles.topRightButton}
+        onPress={() =>
+          router.replace({
+            pathname: '/quiz',
+            params: { planet },
+          })
+        }
+      >
+        <Text style={styles.greenTopRightText}>もう一回チャレンジ</Text>
+      </TouchableOpacity>
+
       <View style={styles.container}>
         <Text style={styles.title}>おめでとう！全問正解！！</Text>
 
         <View style={styles.planetWrapper}>
-  <Image source={selectedImage} style={styles.planetImage} />
-</View>
+          <Image source={selectedImage} style={styles.planetImage} />
+        </View>
 
         <Text style={styles.subtitle}>君だけの惑星写真を手に入れたよ！</Text>
         <Text style={styles.note}>マイページの写真ホルダーに保存したよ</Text>
@@ -71,7 +83,7 @@ export default function PrizeScreen() {
           style={styles.button}
           onPress={() => router.replace('/(tabs)/mypage')}
         >
-          <Text style={styles.buttonText}>MyPageに戻る</Text>
+          <Text style={styles.buttonText}>マイページへ</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
@@ -83,6 +95,21 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  topRightButton: {
+    position: 'absolute',
+    top: 30,
+    right: 20,
+    backgroundColor: '#2B31A4',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    zIndex: 10,
+  },
+  greenTopRightText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   container: {
     flex: 1,
@@ -109,46 +136,34 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  planet: {
-    width: width * 0.4,
-    aspectRatio: 1,
+  planetWrapper: {
+    width: 160,
+    height: 160,
     borderRadius: 16,
-    resizeMode: 'cover',
-    marginBottom: 20,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
+    backgroundColor: '#000',
+    marginBottom: 20,
+  },
+  planetImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   button: {
-    backgroundColor: '#2B31A4',
+    backgroundColor: '#00FF2B',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
     marginTop: 30,
   },
   buttonText: {
-    color: '#fff',
+    color: '#000',
     fontWeight: 'bold',
     fontSize: 16,
   },
-  planetWrapper: {
-  width: 160,
-  height: 160,
-  borderRadius: 16,
-  overflow: 'hidden',
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
-  shadowRadius: 6,
-  elevation: 6,
-  backgroundColor: '#000', 
-  marginBottom: 20,
-},
-planetImage: {
-  width: '100%',
-  height: '100%',
-  resizeMode: 'cover',
-},
 });

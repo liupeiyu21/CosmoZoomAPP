@@ -15,14 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import planetAssets from '../constants/planetAssets';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
-import { Pressable } from 'react-native';
-
-
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +36,8 @@ const planetNameMap: Record<string, string> = {
   moon: '月',
   sun: '太陽',
 };
+
+const logo = require('../../assets/logo.png'); 
 
 export default function MyPage() {
   const [nickname, setNickname] = useState('');
@@ -70,10 +64,10 @@ export default function MyPage() {
         const planetBaseKeys = gallery.map((g: string) => g.split('_')[0]);
         const remaining = allPlanets.filter(p => !planetBaseKeys.includes(p));
         const totalSlots = 15;
-const withPlaceholders = [
-  ...gallery,
-  ...Array(Math.max(0, totalSlots - gallery.length)).fill('unknown'),
-];
+        const withPlaceholders = [
+          ...gallery,
+          ...Array(Math.max(0, totalSlots - gallery.length)).fill('unknown'),
+        ];
 
         setOrderedGallery(withPlaceholders);
       };
@@ -114,9 +108,25 @@ const withPlaceholders = [
       resizeMode="cover"
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>ホームへ戻る</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRow}>
+          <Image source={logo} style={styles.logo} resizeMode="contain" />
+          <View style={styles.headerButtons}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backText}>ホームへ戻る</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.backButton, { backgroundColor: '#ff4444', marginLeft: 8 }]}
+              onPress={async () => {
+                await AsyncStorage.removeItem('gallery');
+                setOrderedGallery([]);
+                alert('リセット完了！🌍');
+              }}
+            >
+              <Text style={styles.backText}>ギャラリーをリセット</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <View style={styles.profileBox}>
           <View style={styles.avatarWrapper}>
@@ -129,17 +139,6 @@ const withPlaceholders = [
             </TouchableOpacity>
             <Text style={styles.avatarHint}>タップして変更</Text>
           </View>
-
-          <TouchableOpacity
-            style={[styles.greenButton, { backgroundColor: '#ff4444' }]}
-            onPress={async () => {
-              await AsyncStorage.removeItem('gallery');
-              setOrderedGallery([]);
-              alert('リセット完了！🌍');
-            }}
-          >
-            <Text style={styles.greenText}>ギャラリーをリセット</Text>
-          </TouchableOpacity>
 
           <View style={styles.infoBox}>
             {editNick ? (
@@ -205,7 +204,6 @@ const withPlaceholders = [
             const image = planetAssets[planetName]?.[imgIndex];
 
             return (
-              
               <View key={index} style={styles.photoBox}>
                 {image ? (
                   <>
@@ -237,13 +235,25 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     flexGrow: 1,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logo: {
+    height: 90,
+    width: 160,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   backButton: {
-    alignSelf: 'flex-end',
     backgroundColor: '#2B31A4',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
-    marginBottom: 10,
   },
   backText: {
     color: '#fff',
@@ -310,29 +320,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   photoGrid: {
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'space-between',
-  rowGap: 48,
-},
-
-photoBox: {
-  width: `${100 / 5 - 2}%`, // приблизно 18% для 5 в ряд
-  aspectRatio: 1,
-  alignItems: 'center',
-},
-
-planetImage: {
-  width: '100%',
-  height: '100%',
-  borderRadius: 12,
-  resizeMode: 'cover',
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.3,
-  shadowRadius: 4,
-  elevation: 6,
-},
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 48,
+  },
+  photoBox: {
+    width: `${100 / 5 - 2}%`, // приблизно 18% для 5 в ряд
+    aspectRatio: 1,
+    alignItems: 'center',
+  },
+  planetImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    resizeMode: 'cover',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+  },
   planetName: {
     marginTop: 6,
     fontSize: 19,
