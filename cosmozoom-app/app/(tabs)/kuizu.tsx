@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Dimensions, Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, } from 'react-native-reanimated';
 const { width, height } = Dimensions.get('window');
 const DOT_COUNT = 14;
 const DURATION = 1000;
+const logo = require('../../assets/logo.png'); 
 
 const wakusei_kuizu = [
   {
@@ -345,7 +347,7 @@ export default function KuizuScreen() {
     return () => clearTimeout(timer);
   }, []);
   // クイズ終了時に全問正解していれば惑星をクリア済みにする
- useEffect(() => {
+useEffect(() => {
   if (isQuizFinished && shuffledQuiz) {
     const passedAll = correctCount === shuffledQuiz.questions.length;
     const currentPlanet = shuffledQuiz.id;
@@ -357,15 +359,9 @@ export default function KuizuScreen() {
         params: { planet: currentPlanet }
       });
     }
-<<<<<<< HEAD
   }
 }, [isQuizFinished, correctCount, shuffledQuiz, nextPlanet]);
 
-
-
-=======
-  }, [isQuizFinished, correctCount, shuffledQuiz, nextPlanet]);
->>>>>>> origin/feature/testsimizu
   const dotStyles = [...Array(DOT_COUNT)].map((_, i) => {
     const angle = (2 * Math.PI * i) / DOT_COUNT;
     const x = Math.cos(angle);
@@ -420,21 +416,15 @@ const handlePlanetPress = (planetId: string) => {
               ? require('../../assets/images/kuizu_bac.png')
               : require('../../assets/images/haikei.png') }
           style={styles.background}
-<<<<<<< HEAD
-          resizeMode="cover"
-        >
-        <Pressable
-  style={styles.mypageButtonAbsolute}
-  onPress={() => router.push('/mypage')}
->
-  <Text style={styles.greenText}>マイページへ</Text>
-</Pressable>
-
-=======
           resizeMode="cover" >
-          <Text style={styles.title}>マイ<br/>ページ</Text>
->>>>>>> origin/feature/testsimizu
-          <Pressable onPress={() => router.push('/')} style={styles.button}>
+            <View style={styles.headerRow}></View>
+             <Image source={logo} style={styles.logo} resizeMode="contain" />
+
+          <Pressable onPress={() => router.push('/(tabs)/mypage')} style={styles.title}>
+          <Text style={styles.retryButtonText}>マイページへ</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.push('/(tabs)')} style={styles.button}>
             <Text style={styles.buttonText}>ホームへ戻る</Text>
           </Pressable>
           {!showQuiz && (
@@ -557,6 +547,23 @@ greenText: {
     top: height / 2 - 25,
     left: width / 2 - 25,
   },
+    headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+logo: {
+  position: 'absolute',
+  top: 20,
+  left: 20,
+  height: 90,
+  width: 160,
+  resizeMode: 'contain',
+  zIndex: 10,
+},
+
+
   title: {
     fontSize: 16,
     color: 'black',
@@ -564,34 +571,13 @@ greenText: {
     padding: 10,
     textAlign: 'center',
     position: 'absolute',
+     paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 10,
     top: '5%',
     right: '5%',
     zIndex: 2,
   },
-<<<<<<< HEAD
- button: {
-  backgroundColor: '#C94D89',
-  paddingVertical: 6,
-  paddingHorizontal: 12,
-  borderRadius: 10,
-  alignItems: 'center',
-  position: 'absolute',
-  bottom: '5%',
-  right: '5%',
-  zIndex: 2,
-},
-buttonText: {
-  color: 'white',
-  fontSize: 16,
-  fontWeight: 'bold',
-},
-
-  list: {
-    padding: 100,
-    justifyContent: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-=======
   button: {
     backgroundColor: '#C94D89',
     padding: 10,
@@ -600,7 +586,12 @@ buttonText: {
     position: 'absolute',
     bottom: '5%',
     right: '5%',
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
     zIndex: 2,
+    
   },
   buttonText: {
     color: 'white',
@@ -616,7 +607,6 @@ buttonText: {
     left: 0,
     width: '100%',
     height: '100%',
->>>>>>> origin/feature/testsimizu
   },
     absolutePlanetItem: {
     position: 'absolute',
@@ -703,7 +693,7 @@ buttonText: {
     backgroundColor: '#00FF2B',
     marginTop: 20,
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
   },
   retryButtonText: {
