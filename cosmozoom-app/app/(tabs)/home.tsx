@@ -8,17 +8,11 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-//view画面のレイアウト　textは文字の表示 stylesheetはスタイルの設定(CSSのようなもの)
-// TouchableOpacityタップできるボタンや領域を作る。Dimensionsデバイスのサイズ情報を取得するためのAPIです。
-//TouchableWithoutFeedbackタップできる領域を作るが、タップ時の視覚的な変化（エフェクト）は何も起きないコンポーネントです。カスタムなタップ処理をしたいときに使います。
 import Svg, { Ellipse } from "react-native-svg";
-//SVG描画の「親」コンポーネントです。これで「ここからここまでがSVGの領域ですよ」と指定します。
-
 import {
   GestureHandlerRootView,
   PanGestureHandler,
   PinchGestureHandler,
-  PinchGestureHandlerGestureEvent
 } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedGestureHandler,
@@ -26,19 +20,16 @@ import Animated, {
   useSharedValue,
   withDecay,
 } from "react-native-reanimated";
+import { router } from "expo-router";
 
-// デバイスの画面サイズを取得
 const { width, height } = Dimensions.get("window");
+const SOLAR_WIDTH = width * 0.9;
+const SOLAR_HEIGHT = height * 0.55;
+const ORBIT_MARGIN_X = SOLAR_WIDTH * 0.01;
+const ORBIT_MARGIN_Y = SOLAR_HEIGHT * 0.001;
 
-// 太陽系表示サイズの定義
-const SOLAR_WIDTH = width * 0.9; //太陽系を表示するエリアの横幅を決めています。画面の幅の90%を使用します。
-const SOLAR_HEIGHT = height * 0.55; //太陽系を表示するエリアの縦幅を決めています。画面の高さ（height）の55%を使う、という意味です。
-const ORBIT_MARGIN_X = SOLAR_WIDTH * 0.01; //軌道（楕円）の横方向の余白です。
-const ORBIT_MARGIN_Y = SOLAR_HEIGHT * 0.001; //軌道（楕円）の縦方向の余白です。
-
-// 惑星画像の読み込み
 const planetImages = {
-  "mercury.png": require("../../assets/images/mercury.png"), //画像を <Image source={...} /> で表示する際に、require() を使って画像ファイルを指定します。
+  "mercury.png": require("../../assets/images/mercury.png"),
   "venus.png": require("../../assets/images/venus.png"),
   "earth.png": require("../../assets/images/earth.png"),
   "mars.png": require("../../assets/images/mars.png"),
@@ -48,7 +39,6 @@ const planetImages = {
   "neptune.png": require("../../assets/images/neptune.png"),
 };
 
-// 惑星の日本語名マップ
 const planetNameMap = {
   "mercury.png": "水星",
   "venus.png": "金星",
@@ -60,24 +50,18 @@ const planetNameMap = {
   "neptune.png": "海王星",
 };
 
-// 惑星の詳細情報　planetInfo はオブジェクト（連想配列）です。
 const planetInfo = {
   "mars.png": {
-    size: "6,779km", // 火星の直径
-    mass: "6.39×10^23kg", // 火星の質量
-    temp: "-63℃", // 火星の平均気温
+    size: "6,779km",
+    mass: "6.39×10^23kg",
+    temp: "-63℃",
   },
 };
 
-// スピードやサイズのベース値
-const baseSpeed = 0.8; //惑星の回転アニメーションなどで使う基準となるスピードです。各惑星の速度をこの値を元に調整できます。
-const baseSize = 0.045; //惑星の表示サイズの基準値です。
-const MIN_PLANET_SIZE = 0.025; // 最小の惑星サイズです。これ以下には縮小しません。
+const baseSpeed = 0.8;
+const baseSize = 0.045;
+const MIN_PLANET_SIZE = 0.025;
 
-// 惑星の公転周期とサイズ比
-// sizeRatio水星の地球に対する直径の比率です。地球の直径を1としたとき、水星は約0.383倍の大きさという意味です。
-// orbit公転軌道の番号です。0が最も内側の軌道（水星）で、7が最も外側の軌道（海王星）です。
-// periodは公転周期を表します。単位は地球日です。
 const planetData = [
   { img: "mercury.png", sizeRatio: 0.383, orbit: 7, period: 88 },
   { img: "venus.png", sizeRatio: 0.949, orbit: 6, period: 225 },
@@ -89,7 +73,6 @@ const planetData = [
   { img: "neptune.png", sizeRatio: 3.88, orbit: 0, period: 60190 },
 ];
 
-// 惑星のサイズ・スピードを計算
 const maxPlanetSize = 11.21;
 const planets = planetData.map((p) => {
   const scaledSize = baseSize * (p.sizeRatio / maxPlanetSize);
@@ -106,21 +89,18 @@ export default function HomeScreen() {
     planets.map((_, i) => (Math.PI * 2 * i) / 8 - Math.PI / 2)
   );
   const [selectedPlanet, setSelectedPlanet] = useState(null);
-  const [planetPaused, setPlanetPaused] = useState(
-    Array(planets.length).fill(false)
-  );
+  const [isPaused, setIsPaused] = useState(false);
   const requestRef = useRef();
 
-  const scale = useSharedValue(1);//アニメーションやジェスチャー操作の値を管理するための「共有値（shared value）」を作っています。初期値は1
-  const translateX = useSharedValue(0);//横方向（X軸）の移動量を管理する値です。
-  const translateY = useSharedValue(0);//縦方向（Y軸）の移動量を管理する値です。
+  const scale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   const pinchHandler = useAnimatedGestureHandler({
     onActive: (event) => {
       scale.value = event.scale;
     },
   });
-
 
   const panHandler = useAnimatedGestureHandler({
     onStart: (_, ctx) => {
@@ -132,14 +112,8 @@ export default function HomeScreen() {
       translateY.value = ctx.startY + event.translationY;
     },
     onEnd: (event) => {
-      translateX.value = withDecay({
-        velocity: event.velocityX,
-        clamp: [-width, width],
-      });
-      translateY.value = withDecay({
-        velocity: event.velocityY,
-        clamp: [-height, height],
-      });
+      translateX.value = withDecay({ velocity: event.velocityX, clamp: [-width, width] });
+      translateY.value = withDecay({ velocity: event.velocityY, clamp: [-height, height] });
     },
   });
 
@@ -157,14 +131,19 @@ export default function HomeScreen() {
       const now = Date.now();
       const delta = (now - lastTime) / 1000;
       lastTime = now;
-      setAngles((prev) =>
-        prev.map((a, i) => (planetPaused[i] ? a : a + planets[i].speed * delta))
-      );
+
+      if (!isPaused) {
+        setAngles((prev) =>
+          prev.map((a, i) => a + planets[i].speed * delta)
+        );
+      }
+
       requestRef.current = requestAnimationFrame(animate);
     };
+
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current);
-  }, [planetPaused]);
+  }, [isPaused]);
 
   const centerX = SOLAR_WIDTH / 2;
   const centerY = SOLAR_HEIGHT / 2;
@@ -172,46 +151,46 @@ export default function HomeScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={styles.container}>
-    <Image
-      source={require('../../assets/images/login_background.png')}
-      style={{ position: 'absolute', top: 0, left: 0, width: width, height: height }}
-      resizeMode="cover"
-    />
+        <Image
+          source={require("../../assets/images/login_background.png")}
+          style={{ position: 'absolute', top: 0, left: 0, width, height }}
+          
+        />
 
-
-        <TouchableOpacity style={styles.myPageButton}>
+        <TouchableOpacity
+          style={styles.myPageButton}
+          onPress={() => router.push("/mypage")}
+        >
           <Text style={styles.myPageText}>マイページ</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.startButton, { backgroundColor: "#888" }]}
+          onPress={() => setIsPaused(prev => !prev)}
+        >
+          <Text style={styles.startText}>{isPaused ? '再開 ▶︎' : '停止 ⏸'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.gameButton, { backgroundColor: "#C94D89" }]}
+          onPress={() => router.push("/game")}
+          >
+          <Text style={styles.startText}>ゲームスタート</Text>
+          </TouchableOpacity>
+            
 
         <PanGestureHandler onGestureEvent={panHandler}>
           <Animated.View style={animatedStyle}>
             <PinchGestureHandler onGestureEvent={pinchHandler}>
-              <Animated.View
-                style={[
-                  styles.solarSystem,
-                  { width: SOLAR_WIDTH, height: SOLAR_HEIGHT },
-                ]}
-              >
-                <Svg
-                  width={SOLAR_WIDTH}
-                  height={SOLAR_HEIGHT}
-                  style={StyleSheet.absoluteFill}
-                >
+              <Animated.View style={[styles.solarSystem, { width: SOLAR_WIDTH, height: SOLAR_HEIGHT }]}>
+                <Svg width={SOLAR_WIDTH} height={SOLAR_HEIGHT} style={StyleSheet.absoluteFill}>
                   {[...Array(8)].map((_, i) => (
                     <Ellipse
                       key={i}
                       cx={centerX}
                       cy={centerY}
-                      rx={
-                        SOLAR_WIDTH / 2 -
-                        ORBIT_MARGIN_X -
-                        i * (SOLAR_WIDTH * 0.055)
-                      }
-                      ry={
-                        SOLAR_HEIGHT / 2 -
-                        ORBIT_MARGIN_Y -
-                        i * (SOLAR_HEIGHT * 0.055)
-                      }
+                      rx={SOLAR_WIDTH / 2 - ORBIT_MARGIN_X - i * (SOLAR_WIDTH * 0.055)}
+                      ry={SOLAR_HEIGHT / 2 - ORBIT_MARGIN_Y - i * (SOLAR_HEIGHT * 0.055)}
                       stroke="#fff"
                       strokeWidth="1"
                       fill="none"
@@ -233,29 +212,15 @@ export default function HomeScreen() {
 
                 {planets.map((p, idx) => {
                   const angle = angles[idx];
-                  const rx =
-                    SOLAR_WIDTH / 2 -
-                    ORBIT_MARGIN_X -
-                    p.orbit * (SOLAR_WIDTH * 0.055);
-                  const ry =
-                    SOLAR_HEIGHT / 2 -
-                    ORBIT_MARGIN_Y -
-                    p.orbit * (SOLAR_HEIGHT * 0.055);
-                  const cx =
-                    centerX + rx * Math.cos(angle) - (SOLAR_WIDTH * p.size) / 2;
-                  const cy =
-                    centerY + ry * Math.sin(angle) - (SOLAR_WIDTH * p.size) / 2;
+                  const rx = SOLAR_WIDTH / 2 - ORBIT_MARGIN_X - p.orbit * (SOLAR_WIDTH * 0.055);
+                  const ry = SOLAR_HEIGHT / 2 - ORBIT_MARGIN_Y - p.orbit * (SOLAR_HEIGHT * 0.055);
+                  const cx = centerX + rx * Math.cos(angle) - (SOLAR_WIDTH * p.size) / 2;
+                  const cy = centerY + ry * Math.sin(angle) - (SOLAR_WIDTH * p.size) / 2;
+
                   return (
                     <TouchableWithoutFeedback
                       key={p.img}
-                      onPress={() => {
-                        setSelectedPlanet(p);
-                        setPlanetPaused(() => {
-                          const updated = Array(planets.length).fill(false);
-                          updated[idx] = true;
-                          return updated;
-                        });
-                      }}
+                      onPress={() => setSelectedPlanet(p)}
                     >
                       <Image
                         source={planetImages[p.img]}
@@ -276,40 +241,16 @@ export default function HomeScreen() {
         </PanGestureHandler>
 
         {selectedPlanet && (
-          <>
-            <View style={styles.infoBoxStyled}>
-              <View style={styles.infoTextBlock}>
-                <Text style={styles.planetName}>
-                  {planetNameMap[selectedPlanet.img]}
-                </Text>
-                <Text style={styles.infoText}>
-                  太陽から{selectedPlanet.orbit + 1}番目
-                </Text>
-                <Text style={styles.infoText}>
-                  大きさ: {planetInfo[selectedPlanet.img]?.size}
-                </Text>
-                <Text style={styles.infoText}>
-                  質量: {planetInfo[selectedPlanet.img]?.mass}
-                </Text>
-                <Text style={styles.infoText}>
-                  平均気温: {planetInfo[selectedPlanet.img]?.temp}
-                </Text>
-              </View>
-              {/* <Image
-                source={planetImages[selectedPlanet.img]}
-                style={styles.infoPlanetImage}
-                resizeMode="contain"
-              /> */}
+          <View style={styles.infoBoxStyled}>
+            <View style={styles.infoTextBlock}>
+              <Text style={styles.planetName}>{planetNameMap[selectedPlanet.img]}</Text>
+              <Text style={styles.infoText}>太陽から{selectedPlanet.orbit + 1}番目</Text>
+              <Text style={styles.infoText}>大きさ: {planetInfo[selectedPlanet.img]?.size}</Text>
+              <Text style={styles.infoText}>質量: {planetInfo[selectedPlanet.img]?.mass}</Text>
+              <Text style={styles.infoText}>平均気温: {planetInfo[selectedPlanet.img]?.temp}</Text>
             </View>
-          </>
-        )}
-
-        <TouchableOpacity style={styles.startButton}>
-          <View style={styles.pauseIcon}>
-            <Text style={{ color: "#fff", fontSize: 24 }}>⏸</Text>
           </View>
-          <Text style={styles.startText}>ゲームスタート</Text>
-        </TouchableOpacity>
+        )}
       </View>
     </GestureHandlerRootView>
   );
@@ -321,15 +262,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#222",
     justifyContent: "center",
     alignItems: "center",
-  },
-  title: {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-    zIndex: 10,
   },
   myPageButton: {
     position: "absolute",
@@ -351,20 +283,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   startButton: {
-    position: "absolute",
-    bottom: 40,
-    right: 30,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#e96b8b",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 8,
-    zIndex: 10,
+  position: "absolute",
+  top: 80, // マイページの下に配置
+  right: 20,
+  backgroundColor: "#e96b8b",
+  paddingHorizontal: 16,
+  paddingVertical: 8,
+  borderRadius: 8,
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 40,
+  zIndex: 10,
   },
-  pauseIcon: {
-    marginRight: 8,
-  },
+  gameButton: {
+  position: "absolute",
+  bottom: 30,     // 下からの距離
+  right: 20,      // 右からの距離
+  backgroundColor: "#C94D89",
+  paddingHorizontal: 18,
+  paddingVertical: 10,
+  borderRadius: 8,
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 40,
+  zIndex: 10,
+},
+
   startText: {
     color: "#fff",
     fontWeight: "bold",
@@ -388,27 +332,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
     padding: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   infoTextBlock: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
+    justifyContent: "flex-start",
     width: "100%",
   },
   infoText: {
     fontSize: 13,
     color: "#fff",
     marginVertical: 1,
-  },
-  infoPlanetImage: {
-    position: "absolute",
-    right: -width * 0.25,
-    top: height * 0.35,
-    width: width * 1,
-    height: width * 1,
-    zIndex: 1,
   },
 });
