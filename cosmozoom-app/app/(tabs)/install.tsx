@@ -12,6 +12,8 @@ import {
 // @ts-ignore: JSON読み込みのため
 import users from "../../assets/user.json";
 
+import { router } from "expo-router";
+
 export default function InstallScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -31,8 +33,11 @@ export default function InstallScreen() {
     );
 
     if (foundUser) {
-      console.log("ログイン成功", `ようこそ ${foundUser.username} さん`);
-      setIsLogin(true);
+      console.log("ログイン成功");
+      router.push({
+        pathname: "/nickname",
+        params: { username: foundUser.username },
+      });
       // 🔁 必要に応じて画面遷移など
     } else {
       console.log("エラー", "ユーザー名またはパスワードが間違っています");
@@ -54,14 +59,16 @@ export default function InstallScreen() {
       source={require("../../assets/images/login_background.png")}
       style={styles.background}
     >
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>Cosmo Zoom ログイン</Text>
-      </View>
+      <ImageBackground
+        source={require("../../assets/images/icon.png")}
+        style={styles.logoContainer}
+        resizeMode="contain"
+      />
 
-      <View style={styles.formContainer}>
-        <TextInput
-          placeholder="ユーザー名"
-          value={username}
+        <View style={styles.formContainer}>
+          <TextInput
+            placeholder="ユーザー名"
+            value={username}
           onChangeText={setUsername}
           style={styles.input}
         />
@@ -85,7 +92,7 @@ export default function InstallScreen() {
         </TouchableOpacity>{" "}
         {islogin && (
           <View>
-            <Text>ようこそ {username} さん</Text>
+        
           </View>
         )}
       </View>
@@ -96,11 +103,10 @@ export default function InstallScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1, width: "100%", height: "100%" },
   logoContainer: {
-    marginTop: 80,
+    marginTop: 70,
     alignSelf: "center",
-    backgroundColor: "#ccc",
-    padding: 20,
-    borderRadius: 8,
+    width: 420, // ← お好みでサイズ調整
+    height: 220, // ← お好みでサイズ調整
   },
   logoText: { fontSize: 24, fontWeight: "bold", textAlign: "center" },
   formContainer: {
