@@ -333,6 +333,8 @@ export default function KuizuScreen() {
   const [isQuizFinished, setIsQuizFinished] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [clearedPlanets, setClearedPlanets] = useState<string[]>([]);
+  const [pressedPlanetId, setPressedPlanetId] = useState<string | null>(null);
+
   // shuffledQuizを定義
   const [shuffledQuiz, setShuffledQuiz] = useState<typeof wakusei_kuizu[0] | null>(null);
   const planetOrder = ['earth', 'mars','venus','mercury','jupiter','saturn','uranus','neptune','惑星写真80種類集め'];
@@ -417,7 +419,6 @@ const handlePlanetPress = (planetId: string) => {
               : require('../../assets/images/haikei.png') }
           style={styles.background}
           resizeMode="cover" >
-            <View style={styles.headerRow}></View>
              <Image source={logo} style={styles.logo} resizeMode="contain" />
 
           <Pressable onPress={() => router.push('/(tabs)/mypage')} style={styles.title}>
@@ -427,6 +428,7 @@ const handlePlanetPress = (planetId: string) => {
           <Pressable onPress={() => router.push('/(tabs)')} style={styles.button}>
             <Text style={styles.buttonText}>ホームへ戻る</Text>
           </Pressable>
+          
           {!showQuiz && (
             <>
               <View style={styles.planetsContainer}>

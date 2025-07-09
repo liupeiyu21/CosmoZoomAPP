@@ -108,9 +108,11 @@ export default function MyPage() {
       resizeMode="cover"
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.headerRow}>
-          <Image source={logo} style={styles.logo} resizeMode="contain" />
-          <View style={styles.headerButtons}>
+      <View style={styles.headerRow}>
+  <TouchableOpacity onPress={() => router.push('/(tabs)/mypage')}>
+    <Image source={logo} style={styles.logo} resizeMode="contain" />
+  </TouchableOpacity>
+  <View style={styles.headerButtons}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Text style={styles.backText}>ホームへ戻る</Text>
             </TouchableOpacity>
