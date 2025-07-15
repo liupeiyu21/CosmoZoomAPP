@@ -32,7 +32,7 @@ export default function NicknameScreen() {
     <ImageBackground
       source={require('../../assets/images/login_background.png')}
       style={styles.background}
-    //   resizeMode="cover"
+      resizeMode="cover"
     >
       <Text style={styles.title}>
         {username} さん、{"\n"}ニックネームは{"\n"}なんですか？
@@ -56,13 +56,14 @@ export default function NicknameScreen() {
 const styles = StyleSheet.create({
   background: { 
     flex: 1,
-    paddingTop: 150,
+    // paddingTop: 150,
     width: "100%",
     height: "100%",
     alignItems: 'center'
   },
   title: {
     fontSize: 32,
+    paddingTop: 245,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
@@ -70,9 +71,9 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#fff',
-
-    width: '30%',
-    height: 60,
+  
+    width: '60%',
+    height: 70,
     paddingHorizontal: 20,
     borderRadius: 16,
     borderWidth: 5,

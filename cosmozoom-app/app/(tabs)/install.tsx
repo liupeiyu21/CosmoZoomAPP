@@ -1,4 +1,3 @@
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -9,49 +8,65 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// @ts-ignore: JSON読み込みのため
 import users from "../../assets/user.json";
-
 import { router } from "expo-router";
+
+// Expo Googleログイン用
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+
+// Firebase認証用
+import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import { auth } from "../../firebase/firebaseConfig"; // 自分のfirebase.ts
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function InstallScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [islogin, setIsLogin] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: "212604807081-p7fprclar8jl7af10qe89h2kig7n4fhj.apps.googleusercontent.com", // ← Google Cloud Consoleから取得
+    redirectUri: "https://auth.expo.io/@liupeiyu/cosmozoom-app", // ←ここ重要！
+    scopes: ["openid", "profile", "email"],
+  });
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
-    });
-  }, []);
+    if (response?.type === "success") {
+      const { idToken } = response.authentication;
+      const credential = GoogleAuthProvider.credential(idToken);
+      signInWithCredential(auth, credential)
+        .then((userCredential) => {
+          setUser(userCredential.user);
+          Alert.alert("Googleログイン成功", `${userCredential.user.displayName} さん`);
+          router.push("/nickname"); // 任意の遷移先に変更
+        })
+        .catch((error) => {
+          console.error("Firebaseサインイン失敗:", error);
+          Alert.alert("Firebaseログイン失敗");
+        });
+    }
+  }, [response]);
 
   const handleFakeLogin = () => {
-    console.log("ログインボタンが押されました");
     const foundUser = users.find(
       (u: { username: string; password: string }) =>
         u.username === username && u.password === password
     );
 
     if (foundUser) {
-      console.log("ログイン成功");
       router.push({
         pathname: "/nickname",
         params: { username: foundUser.username },
       });
-      // 🔁 必要に応じて画面遷移など
     } else {
-      console.log("エラー", "ユーザー名またはパスワードが間違っています");
+      Alert.alert("ログインエラー", "ユーザー名またはパスワードが間違っています");
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      Alert.alert("Googleログイン成功");
-    } catch (error) {
-      Alert.alert("Googleログイン失敗", "もう一度お試しください");
-    }
+    promptAsync();
   };
 
   return (
@@ -65,10 +80,10 @@ export default function InstallScreen() {
         resizeMode="contain"
       />
 
-        <View style={styles.formContainer}>
-          <TextInput
-            placeholder="ユーザー名"
-            value={username}
+      <View style={styles.formContainer}>
+        <TextInput
+          placeholder="ユーザー名"
+          value={username}
           onChangeText={setUsername}
           style={styles.input}
         />
@@ -89,12 +104,7 @@ export default function InstallScreen() {
           <Text style={[styles.loginText, { color: "white" }]}>
             Google でログイン
           </Text>
-        </TouchableOpacity>{" "}
-        {islogin && (
-          <View>
-        
-          </View>
-        )}
+        </TouchableOpacity>
       </View>
     </ImageBackground>
   );
@@ -103,16 +113,15 @@ export default function InstallScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1, width: "100%", height: "100%" },
   logoContainer: {
-    marginTop: 70,
+    marginTop: 180,
     alignSelf: "center",
-    width: 420, // ← お好みでサイズ調整
-    height: 220, // ← お好みでサイズ調整
+    width: 290,
+    height: 220,
   },
-  logoText: { fontSize: 24, fontWeight: "bold", textAlign: "center" },
   formContainer: {
     position: "absolute",
-    bottom: 100,
-    width: "20%",
+    bottom: 200,
+    width: "45%",
     alignSelf: "center",
   },
   input: {

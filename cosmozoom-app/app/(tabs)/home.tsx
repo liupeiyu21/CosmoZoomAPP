@@ -1,3 +1,6 @@
+// このhome.tsxは、React Native + Expo + Reanimated + Gesture Handlerを使って、
+// 「太陽系の惑星が楕円軌道を回るインタラクティブな画面」を実現しているコンポーネントです。
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -8,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+
 import Svg, { Ellipse } from "react-native-svg";
 import {
   GestureHandlerRootView,
@@ -21,13 +25,19 @@ import Animated, {
   withDecay,
 } from "react-native-reanimated";
 import { router } from "expo-router";
+import { clamp } from "react-native-redash";
 
+// Dimensions.get("window")で画面サイズを取得し、
 const { width, height } = Dimensions.get("window");
+//SOLAR_WIDTHとSOLAR_HEIGHTで太陽系の表示エリアを決めています。
 const SOLAR_WIDTH = width * 0.9;
 const SOLAR_HEIGHT = height * 0.55;
+//軌道の余白もORBIT_MARGIN_XとORBIT_MARGIN_Yで調整。
 const ORBIT_MARGIN_X = SOLAR_WIDTH * 0.01;
 const ORBIT_MARGIN_Y = SOLAR_HEIGHT * 0.001;
 
+
+// 惑星の画像と名前をマッピングするオブジェクトを定義
 const planetImages = {
   "mercury.png": require("../../assets/images/mercury.png"),
   "venus.png": require("../../assets/images/venus.png"),
@@ -39,6 +49,7 @@ const planetImages = {
   "neptune.png": require("../../assets/images/neptune.png"),
 };
 
+// 惑星の名前を日本語にマッピングするオブジェクト
 const planetNameMap = {
   "mercury.png": "水星",
   "venus.png": "金星",
@@ -50,6 +61,7 @@ const planetNameMap = {
   "neptune.png": "海王星",
 };
 
+// 惑星の情報を定義
 const planetInfo = {
   "mars.png": {
     size: "6,779km",
@@ -58,10 +70,12 @@ const planetInfo = {
   },
 };
 
+// 基本の惑星サイズと速度を定義
 const baseSpeed = 0.8;
 const baseSize = 0.045;
 const MIN_PLANET_SIZE = 0.025;
 
+// 惑星のデータを定義
 const planetData = [
   { img: "mercury.png", sizeRatio: 0.383, orbit: 7, period: 88 },
   { img: "venus.png", sizeRatio: 0.949, orbit: 6, period: 225 },
@@ -85,22 +99,32 @@ const planets = planetData.map((p) => {
 });
 
 export default function HomeScreen() {
+  // useStateフックを使って、惑星の角度、選択された惑星、アニメーションの一時停止状態を管理
   const [angles, setAngles] = useState(
     planets.map((_, i) => (Math.PI * 2 * i) / 8 - Math.PI / 2)
   );
+  // useStateフックを使って、選択された惑星とアニメーションの一時停止状態を管理
   const [selectedPlanet, setSelectedPlanet] = useState(null);
+  // useRefフックを使って、アニメーションのリクエストを管理
   const [isPaused, setIsPaused] = useState(false);
+  //アニメーションフレームIDの保持。
   const requestRef = useRef();
 
+  //ピンチイン・アウトによる拡大率（1〜2倍）。
   const scale = useSharedValue(1);
+  //：パン（ドラッグ）による移動量。
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
-
+  //ピンチ操作でscaleを更新。
   const pinchHandler = useAnimatedGestureHandler({
     onActive: (event) => {
-      scale.value = event.scale;
+      // scale.value = event.scale;
+      scale.value = Math.min(Math.max(event.scale, 1), 2);
     },
   });
+  //ドラッグ操作でtranslateX, translateYを更新し、指を離した後は慣性で動く。
+  const MAX_OFFSET_X = width * 0.45;
+  const MAX_OFFSET_Y = height * 0.25;
 
   const panHandler = useAnimatedGestureHandler({
     onStart: (_, ctx) => {
@@ -108,15 +132,13 @@ export default function HomeScreen() {
       ctx.startY = translateY.value;
     },
     onActive: (event, ctx) => {
-      translateX.value = ctx.startX + event.translationX;
-      translateY.value = ctx.startY + event.translationY;
-    },
-    onEnd: (event) => {
-      translateX.value = withDecay({ velocity: event.velocityX, clamp: [-width, width] });
-      translateY.value = withDecay({ velocity: event.velocityY, clamp: [-height, height] });
-    },
-  });
+    // clampで範囲制限
+    translateX.value = clamp(ctx.startX + event.translationX, -MAX_OFFSET_X, MAX_OFFSET_X);
+    translateY.value = clamp(ctx.startY + event.translationY, -MAX_OFFSET_Y, MAX_OFFSET_Y);
+    }
 
+  });
+  //：上記値をもとに太陽系全体の拡大・移動を実現。
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: translateX.value },
@@ -156,12 +178,14 @@ export default function HomeScreen() {
           style={{ position: 'absolute', top: 0, left: 0, width, height }}
           
         />
-
+     
         <TouchableOpacity
           style={styles.myPageButton}
           onPress={() => router.push("/mypage")}
         >
-          <Text style={styles.myPageText}>マイページ</Text>
+          <Text style={styles.myPageText}>
+            マイページ
+            </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -177,7 +201,9 @@ export default function HomeScreen() {
           >
           <Text style={styles.startText}>ゲームスタート</Text>
           </TouchableOpacity>
-            
+    
+
+             
 
         <PanGestureHandler onGestureEvent={panHandler}>
           <Animated.View style={animatedStyle}>
@@ -265,18 +291,20 @@ const styles = StyleSheet.create({
   },
   myPageButton: {
     position: "absolute",
-    top: 30,
-    right: 20,
+    top: 100,
+    right: 5,
     backgroundColor: "#90ff90",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
     zIndex: 10,
+    transform: [{ rotate: "90deg" }], 
   },
   myPageText: {
     color: "#222",
     fontWeight: "bold",
     fontSize: 16,
+    
   },
   solarSystem: {
     justifyContent: "center",
@@ -284,8 +312,8 @@ const styles = StyleSheet.create({
   },
   startButton: {
   position: "absolute",
-  top: 80, // マイページの下に配置
-  right: 20,
+  top: 90, // マイページの下に配置
+  right: 60,
   backgroundColor: "#e96b8b",
   paddingHorizontal: 16,
   paddingVertical: 8,
@@ -294,11 +322,12 @@ const styles = StyleSheet.create({
   justifyContent: "center",
   minHeight: 40,
   zIndex: 10,
+  transform: [{ rotate: "90deg" }], 
   },
   gameButton: {
   position: "absolute",
-  bottom: 30,     // 下からの距離
-  right: 20,      // 右からの距離
+  bottom: 80,     // 下からの距離
+  right: 250,      // 右からの距離
   backgroundColor: "#C94D89",
   paddingHorizontal: 18,
   paddingVertical: 10,
@@ -307,6 +336,7 @@ const styles = StyleSheet.create({
   justifyContent: "center",
   minHeight: 40,
   zIndex: 10,
+  transform: [{ rotate: "90deg" }], 
 },
 
   startText: {
@@ -323,8 +353,8 @@ const styles = StyleSheet.create({
   },
   infoBoxStyled: {
     position: "absolute",
-    bottom: 30,
-    left: "50%",
+    bottom: "40%",
+    left: "-22%",
     transform: [{ translateX: -150 }],
     width: 300,
     backgroundColor: "#C94D89",
@@ -332,6 +362,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
     padding: 10,
+    transform: [{ rotate: "90deg" }], 
   },
   infoTextBlock: {
     flexDirection: "column",
