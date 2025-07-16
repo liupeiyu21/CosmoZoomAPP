@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 
-import Svg, { Ellipse } from "react-native-svg";
+import { router } from "expo-router";
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -22,10 +22,9 @@ import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
-  withDecay,
 } from "react-native-reanimated";
-import { router } from "expo-router";
 import { clamp } from "react-native-redash";
+import Svg, { Ellipse } from "react-native-svg";
 
 // Dimensions.get("window")で画面サイズを取得し、
 const { width, height } = Dimensions.get("window");
@@ -35,7 +34,6 @@ const SOLAR_HEIGHT = height * 2;
 //軌道の余白もORBIT_MARGIN_XとORBIT_MARGIN_Yで調整。
 const ORBIT_MARGIN_X = SOLAR_WIDTH * 0.001;
 const ORBIT_MARGIN_Y = SOLAR_HEIGHT * 0.001;
-
 
 // 惑星の画像と名前をマッピングするオブジェクトを定義
 const planetImages = {
@@ -63,10 +61,45 @@ const planetNameMap = {
 
 // 惑星の情報を定義
 const planetInfo = {
+  "mercury.png": {
+    size: "4,879km",
+    mass: "3.3×10^23kg",
+    temp: "167℃",
+  },
+  "venus.png": {
+    size: "12,104km",
+    mass: "4.87×10^24kg",
+    temp: "464℃",
+  },
+  "earth.png": {
+    size: "12,742km",
+    mass: "5.97×10^24kg",
+    temp: "15℃",
+  },
   "mars.png": {
     size: "6,779km",
     mass: "6.39×10^23kg",
     temp: "-63℃",
+  },
+  "jupiter.png": {
+    size: "139,820km",
+    mass: "1.90×10^27kg",
+    temp: "-110℃",
+  },
+  "saturn.png": {
+    size: "116,460km",
+    mass: "5.68×10^26kg",
+    temp: "-140℃",
+  },
+  "uranus.png": {
+    size: "50,724km",
+    mass: "8.68×10^25kg",
+    temp: "-195℃",
+  },
+  "neptune.png": {
+    size: "49,244km",
+    mass: "1.02×10^26kg",
+    temp: "-200℃",
   },
 };
 
@@ -90,7 +123,8 @@ const planetData = [
 const maxPlanetSize = 11.21;
 const SCALE_MULTIPLIER = 4; // 👈 拡大倍率を追加（好きな値で調整）
 const planets = planetData.map((p) => {
-  const scaledSize = baseSize * (p.sizeRatio / maxPlanetSize) * SCALE_MULTIPLIER;
+  const scaledSize =
+    baseSize * (p.sizeRatio / maxPlanetSize) * SCALE_MULTIPLIER;
   return {
     img: p.img,
     orbit: p.orbit,
@@ -110,6 +144,9 @@ export default function HomeScreen() {
   const [isPaused, setIsPaused] = useState(false);
   //アニメーションフレームIDの保持。
   const requestRef = useRef();
+
+  // 追加：新たな表示位置を管理するstateを追加
+  const [highlightedPlanet, setHighlightedPlanet] = useState(null);
 
   //ピンチイン・アウトによる拡大率（1〜2倍）。
   const scale = useSharedValue(1);
@@ -133,11 +170,18 @@ export default function HomeScreen() {
       ctx.startY = translateY.value;
     },
     onActive: (event, ctx) => {
-    // clampで範囲制限
-    translateX.value = clamp(ctx.startX + event.translationX, -MAX_OFFSET_X, MAX_OFFSET_X);
-    translateY.value = clamp(ctx.startY + event.translationY, -MAX_OFFSET_Y, MAX_OFFSET_Y);
-    }
-
+      // clampで範囲制限
+      translateX.value = clamp(
+        ctx.startX + event.translationX,
+        -MAX_OFFSET_X,
+        MAX_OFFSET_X
+      );
+      translateY.value = clamp(
+        ctx.startY + event.translationY,
+        -MAX_OFFSET_Y,
+        MAX_OFFSET_Y
+      );
+    },
   });
   //：上記値をもとに太陽系全体の拡大・移動を実現。
   const animatedStyle = useAnimatedStyle(() => ({
@@ -156,9 +200,7 @@ export default function HomeScreen() {
       lastTime = now;
 
       if (!isPaused) {
-        setAngles((prev) =>
-          prev.map((a, i) => a + planets[i].speed * delta)
-        );
+        setAngles((prev) => prev.map((a, i) => a + planets[i].speed * delta));
       }
 
       requestRef.current = requestAnimationFrame(animate);
@@ -173,123 +215,177 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <Image
-          source={require("../../assets/images/login_background.png")}
-          style={{ position: 'absolute', top: 0, left: 0, width, height }}
-          
-        />
-     
-        <TouchableOpacity
-          style={styles.myPageButton}
-          onPress={() => router.push("/mypage")}
-        >
-          <Text style={styles.myPageText}>
-            マイページ
-            </Text>
-        </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={() => {
+        setHighlightedPlanet(null);
+        setSelectedPlanet(null); 
+      }
+        }　>
+        <View style={styles.container}>
+          <Image
+            source={require("../../assets/images/login_background.png")}
+            style={{ position: "absolute", top: 0, left: 0, width, height }}
+          />
 
-        <TouchableOpacity
-          style={[styles.startButton, { backgroundColor: "#888" }]}
-          onPress={() => setIsPaused(prev => !prev)}
-        >
-          <Text style={styles.startText}>{isPaused ? '再開 ▶︎' : '停止 ⏸'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.gameButton, { backgroundColor: "#C94D89" }]}
-          onPress={() => router.push("/kuizu")}
+          <TouchableOpacity
+            style={styles.myPageButton}
+            onPress={() => router.push("/mypage")}
           >
-          <Text style={styles.startText}>ゲームスタート</Text>
+            <Text style={styles.myPageText}>マイページ</Text>
           </TouchableOpacity>
-    
 
-             
+          <TouchableOpacity
+            style={[styles.startButton, { backgroundColor: "#888" }]}
+            onPress={() => setIsPaused((prev) => !prev)}
+          >
+            <Text style={styles.startText}>
+              {isPaused ? "再開 ▶︎" : "停止 ⏸"}
+            </Text>
+          </TouchableOpacity>
 
-        <PanGestureHandler onGestureEvent={panHandler}>
-          <Animated.View style={animatedStyle}>
-            <PinchGestureHandler onGestureEvent={pinchHandler}>
-              <Animated.View style={[styles.solarSystem, { width: SOLAR_WIDTH, height: SOLAR_HEIGHT }]}>
-                <Svg 
-                width={SOLAR_WIDTH} 
-                height={SOLAR_HEIGHT} 
-              
-                style={[StyleSheet.absoluteFill, { zIndex: 1 }]} // ← 追加
+          <TouchableOpacity
+            style={[styles.gameButton, { backgroundColor: "#C94D89" }]}
+            onPress={() => router.push("/kuizu")}
+          >
+            <Text style={styles.startText}>ゲームスタート</Text>
+          </TouchableOpacity>
+
+          <PanGestureHandler onGestureEvent={panHandler}>
+            <Animated.View style={animatedStyle}>
+              <PinchGestureHandler onGestureEvent={pinchHandler}>
+                <Animated.View
+                  style={[
+                    styles.solarSystem,
+                    { width: SOLAR_WIDTH, height: SOLAR_HEIGHT },
+                  ]}
                 >
-                  {[...Array(8)].map((_, i) => (
-                    <Ellipse
-                      key={i}
-                      cx={centerX}
-                      cy={centerY}
-                      rx={SOLAR_WIDTH / 2 - ORBIT_MARGIN_X - i * (SOLAR_WIDTH * 0.055)}
-                      ry={SOLAR_HEIGHT / 2 - ORBIT_MARGIN_Y - i * (SOLAR_HEIGHT * 0.055)}
-                      stroke="#fff"
-                      strokeWidth="1"
-                      fill="none"
-                      opacity={0.4}
-                    />
-                  ))}
-                </Svg>
-
-                <Image
-                  source={require("../../assets/images/sun.png")}
-                  style={{
-                    position: "absolute",
-                    width: SOLAR_WIDTH * 0.4,
-                    height: SOLAR_WIDTH * 0.4,
-                    left: centerX - (SOLAR_WIDTH * 0.4) / 2,
-                    top: centerY - (SOLAR_WIDTH * 0.4) / 2,
-                    zIndex: 0,
-                  }}
-                />
-
-                {planets.map((p, idx) => {
-                  const angle = angles[idx];
-                  const rx = SOLAR_WIDTH / 2 - ORBIT_MARGIN_X - p.orbit * (SOLAR_WIDTH * 0.055);
-                  const ry = SOLAR_HEIGHT / 2 - ORBIT_MARGIN_Y - p.orbit * (SOLAR_HEIGHT * 0.055);
-                  const cx = centerX + rx * Math.cos(angle) - (SOLAR_WIDTH * p.size) / 2;
-                  const cy = centerY + ry * Math.sin(angle) - (SOLAR_WIDTH * p.size) / 2;
-
-                  return (
-                    <TouchableWithoutFeedback
-                      key={p.img}
-                      onPress={() => setSelectedPlanet(p)}
-                    >
-                      <Image
-                        source={planetImages[p.img]}
-                        style={{
-                          position: "absolute",
-                          width: SOLAR_WIDTH * p.size,
-                          height: SOLAR_WIDTH * p.size,
-                          left: cx,
-                          top: cy,
-                          zIndex: 2,
-                        }}
+                  <Svg
+                    width={SOLAR_WIDTH}
+                    height={SOLAR_HEIGHT}
+                    style={[StyleSheet.absoluteFill, { zIndex: 1 }]} // ← 追加
+                  >
+                    {[...Array(8)].map((_, i) => (
+                      <Ellipse
+                        key={i}
+                        cx={centerX}
+                        cy={centerY}
+                        rx={
+                          SOLAR_WIDTH / 2 -
+                          ORBIT_MARGIN_X -
+                          i * (SOLAR_WIDTH * 0.055)
+                        }
+                        ry={
+                          SOLAR_HEIGHT / 2 -
+                          ORBIT_MARGIN_Y -
+                          i * (SOLAR_HEIGHT * 0.055)
+                        }
+                        stroke="#fff"
+                        strokeWidth="1"
+                        fill="none"
+                        opacity={0.4}
                       />
-                    </TouchableWithoutFeedback>
-                  );
-                })}
-              </Animated.View>
-            </PinchGestureHandler>
-          </Animated.View>
-        </PanGestureHandler>
+                    ))}
+                  </Svg>
 
-        {selectedPlanet && (
-          <View style={styles.infoBoxStyled}>
-            <View style={styles.infoTextBlock}>
-              <View>
-                <Text style={styles.planetName}>
+                  <Image
+                    source={require("../../assets/images/sun.png")}
+                    style={{
+                      position: "absolute",
+                      width: SOLAR_WIDTH * 0.4,
+                      height: SOLAR_WIDTH * 0.4,
+                      left: centerX - (SOLAR_WIDTH * 0.4) / 2,
+                      top: centerY - (SOLAR_WIDTH * 0.4) / 2,
+                      zIndex: 0,
+                    }}
+                  />
+
+                  {planets.map((p, idx) => {
+                    const angle = angles[idx];
+                    const rx =
+                      SOLAR_WIDTH / 2 -
+                      ORBIT_MARGIN_X -
+                      p.orbit * (SOLAR_WIDTH * 0.055);
+                    const ry =
+                      SOLAR_HEIGHT / 2 -
+                      ORBIT_MARGIN_Y -
+                      p.orbit * (SOLAR_HEIGHT * 0.055);
+                    const cx =
+                      centerX +
+                      rx * Math.cos(angle) -
+                      (SOLAR_WIDTH * p.size) / 2;
+                    const cy =
+                      centerY +
+                      ry * Math.sin(angle) -
+                      (SOLAR_WIDTH * p.size) / 2;
+
+                    return (
+                      <TouchableWithoutFeedback
+                        key={p.img}
+                        onPress={() => {
+                          setSelectedPlanet(p);
+                          setHighlightedPlanet(p);
+                        }}
+                      >
+                        <Image
+                          source={planetImages[p.img]}
+                          style={{
+                            position: "absolute",
+                            width: SOLAR_WIDTH * p.size,
+                            height: SOLAR_WIDTH * p.size,
+                            left: cx,
+                            top: cy,
+                            zIndex: 2,
+                          }}
+                        />
+                      </TouchableWithoutFeedback>
+                    );
+                  })}
+                </Animated.View>
+              </PinchGestureHandler>
+            </Animated.View>
+          </PanGestureHandler>
+
+          {highlightedPlanet && (
+            <Image
+              source={planetImages[highlightedPlanet.img]}
+              style={{
+                position: "absolute",
+                top: 690,
+                right: 20,
+                width: 150,
+                height: 150,
+                zIndex: 20,
+                borderWidth: 2,
+                borderColor: "#fff",
+                borderRadius: 50,
+                backgroundColor: "rgba(0,0,0,0.2)",
+                transform: [{ rotate: "90deg" }],
+              }}
+            />
+          )}
+
+          {selectedPlanet && (
+            <View style={styles.infoBoxStyled}>
+              <Text style={styles.planetName}>
                 {planetNameMap[selectedPlanet.img]}
+              </Text>
+              <View style={styles.infoTextBlock}>
+                <Text style={styles.infoText}>
+                  太陽から{selectedPlanet.orbit + 1}番目
                 </Text>
-               </View>
-              <Text style={styles.infoText}>太陽から{selectedPlanet.orbit + 1}番目</Text>
-              <Text style={styles.infoText}>大きさ: {planetInfo[selectedPlanet.img]?.size}</Text>
-              <Text style={styles.infoText}>質量: {planetInfo[selectedPlanet.img]?.mass}</Text>
-              <Text style={styles.infoText}>平均気温: {planetInfo[selectedPlanet.img]?.temp}</Text>
+                <Text style={styles.infoText}>
+                  大きさ: {planetInfo[selectedPlanet.img]?.size}
+                </Text>
+                <Text style={styles.infoText}>
+                  質量: {planetInfo[selectedPlanet.img]?.mass}
+                </Text>
+                <Text style={styles.infoText}>
+                  平均気温: {planetInfo[selectedPlanet.img]?.temp}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
     </GestureHandlerRootView>
   );
 }
@@ -310,46 +406,45 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     zIndex: 10,
-    transform: [{ rotate: "90deg" }], 
+    transform: [{ rotate: "90deg" }],
   },
   myPageText: {
     color: "#222",
     fontWeight: "bold",
     fontSize: 16,
-    
   },
   solarSystem: {
     justifyContent: "center",
     alignItems: "center",
   },
   startButton: {
-  position: "absolute",
-  top: 90, // マイページの下に配置
-  right: 60,
-  backgroundColor: "#e96b8b",
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  borderRadius: 8,
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: 40,
-  zIndex: 10,
-  transform: [{ rotate: "90deg" }], 
+    position: "absolute",
+    top: 90, // マイページの下に配置
+    right: 60,
+    backgroundColor: "#e96b8b",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 40,
+    zIndex: 10,
+    transform: [{ rotate: "90deg" }],
   },
   gameButton: {
-  position: "absolute",
-  bottom: 80,     // 下からの距離
-  right: 250,      // 右からの距離
-  backgroundColor: "#C94D89",
-  paddingHorizontal: 18,
-  paddingVertical: 10,
-  borderRadius: 8,
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: 40,
-  zIndex: 10,
-  transform: [{ rotate: "90deg" }], 
-},
+    position: "absolute",
+    bottom: 80, // 下からの距離
+    right: 250, // 右からの距離
+    backgroundColor: "#C94D89",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 40,
+    zIndex: 10,
+    transform: [{ rotate: "90deg" }],
+  },
 
   startText: {
     color: "#fff",
@@ -362,14 +457,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
     marginBottom: 6,
-   
   },
   infoBoxStyled: {
     position: "absolute",
-    bottom: "10%",  // 位置を下に固定（数値を調整可能）
-    left: "0%",    // 左端から少し余白を持たせる
+    bottom: 0, // 位置を下に固定（数値を調整可能）
+    left: -50, // 左端から少し余白を持たせる
     alignSelf: "center", // ← 画面中央に配置
-    width: 300,
+    width: 400,
     backgroundColor: "#C94D89",
     borderRadius: 16,
     paddingHorizontal: 20,
@@ -378,12 +472,11 @@ const styles = StyleSheet.create({
     padding: 10,
     transform: [
       { rotate: "90deg" },
-      { translateX: "-100%" },  // rotate後の位置調整
-      { translateY: "100%" }     // 必要に応じて調整
+      { translateX: "-100%" }, // rotate後の位置調整
+      { translateY: "100%" }, // 必要に応じて調整
     ],
-
   },
-  
+
   infoTextBlock: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -394,6 +487,6 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     color: "#fff",
-    width: "48%", 
+    width: "48%",
   },
 });
