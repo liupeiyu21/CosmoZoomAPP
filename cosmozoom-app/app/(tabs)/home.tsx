@@ -30,10 +30,10 @@ import { clamp } from "react-native-redash";
 // Dimensions.get("window")で画面サイズを取得し、
 const { width, height } = Dimensions.get("window");
 //SOLAR_WIDTHとSOLAR_HEIGHTで太陽系の表示エリアを決めています。
-const SOLAR_WIDTH = width * 0.9;
-const SOLAR_HEIGHT = height * 0.55;
+const SOLAR_WIDTH = width * 1.1;
+const SOLAR_HEIGHT = height * 2;
 //軌道の余白もORBIT_MARGIN_XとORBIT_MARGIN_Yで調整。
-const ORBIT_MARGIN_X = SOLAR_WIDTH * 0.01;
+const ORBIT_MARGIN_X = SOLAR_WIDTH * 0.001;
 const ORBIT_MARGIN_Y = SOLAR_HEIGHT * 0.001;
 
 
@@ -88,8 +88,9 @@ const planetData = [
 ];
 
 const maxPlanetSize = 11.21;
+const SCALE_MULTIPLIER = 4; // 👈 拡大倍率を追加（好きな値で調整）
 const planets = planetData.map((p) => {
-  const scaledSize = baseSize * (p.sizeRatio / maxPlanetSize);
+  const scaledSize = baseSize * (p.sizeRatio / maxPlanetSize) * SCALE_MULTIPLIER;
   return {
     img: p.img,
     orbit: p.orbit,
@@ -197,7 +198,7 @@ export default function HomeScreen() {
 
         <TouchableOpacity
           style={[styles.gameButton, { backgroundColor: "#C94D89" }]}
-          onPress={() => router.push("/game")}
+          onPress={() => router.push("/kuizu")}
           >
           <Text style={styles.startText}>ゲームスタート</Text>
           </TouchableOpacity>
@@ -209,7 +210,12 @@ export default function HomeScreen() {
           <Animated.View style={animatedStyle}>
             <PinchGestureHandler onGestureEvent={pinchHandler}>
               <Animated.View style={[styles.solarSystem, { width: SOLAR_WIDTH, height: SOLAR_HEIGHT }]}>
-                <Svg width={SOLAR_WIDTH} height={SOLAR_HEIGHT} style={StyleSheet.absoluteFill}>
+                <Svg 
+                width={SOLAR_WIDTH} 
+                height={SOLAR_HEIGHT} 
+              
+                style={[StyleSheet.absoluteFill, { zIndex: 1 }]} // ← 追加
+                >
                   {[...Array(8)].map((_, i) => (
                     <Ellipse
                       key={i}
@@ -229,10 +235,11 @@ export default function HomeScreen() {
                   source={require("../../assets/images/sun.png")}
                   style={{
                     position: "absolute",
-                    width: SOLAR_WIDTH * 0.08,
-                    height: SOLAR_WIDTH * 0.08,
-                    left: centerX - (SOLAR_WIDTH * 0.08) / 2,
-                    top: centerY - (SOLAR_WIDTH * 0.08) / 2,
+                    width: SOLAR_WIDTH * 0.4,
+                    height: SOLAR_WIDTH * 0.4,
+                    left: centerX - (SOLAR_WIDTH * 0.4) / 2,
+                    top: centerY - (SOLAR_WIDTH * 0.4) / 2,
+                    zIndex: 0,
                   }}
                 />
 
@@ -256,6 +263,7 @@ export default function HomeScreen() {
                           height: SOLAR_WIDTH * p.size,
                           left: cx,
                           top: cy,
+                          zIndex: 2,
                         }}
                       />
                     </TouchableWithoutFeedback>
@@ -269,7 +277,11 @@ export default function HomeScreen() {
         {selectedPlanet && (
           <View style={styles.infoBoxStyled}>
             <View style={styles.infoTextBlock}>
-              <Text style={styles.planetName}>{planetNameMap[selectedPlanet.img]}</Text>
+              <View>
+                <Text style={styles.planetName}>
+                {planetNameMap[selectedPlanet.img]}
+                </Text>
+               </View>
               <Text style={styles.infoText}>太陽から{selectedPlanet.orbit + 1}番目</Text>
               <Text style={styles.infoText}>大きさ: {planetInfo[selectedPlanet.img]?.size}</Text>
               <Text style={styles.infoText}>質量: {planetInfo[selectedPlanet.img]?.mass}</Text>
@@ -345,33 +357,43 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   planetName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
     marginBottom: 6,
+   
   },
   infoBoxStyled: {
     position: "absolute",
-    bottom: "40%",
-    left: "-22%",
-    transform: [{ translateX: -150 }],
+    bottom: "10%",  // 位置を下に固定（数値を調整可能）
+    left: "0%",    // 左端から少し余白を持たせる
+    alignSelf: "center", // ← 画面中央に配置
     width: 300,
     backgroundColor: "#C94D89",
-    borderRadius: 12,
+    borderRadius: 16,
+    paddingHorizontal: 20,
     borderWidth: 2,
     borderColor: "#fff",
     padding: 10,
-    transform: [{ rotate: "90deg" }], 
+    transform: [
+      { rotate: "90deg" },
+      { translateX: "-100%" },  // rotate後の位置調整
+      { translateY: "100%" }     // 必要に応じて調整
+    ],
+
   },
+  
   infoTextBlock: {
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    width: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 4,
+    columnGap: 4,
   },
   infoText: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#fff",
-    marginVertical: 1,
+    width: "48%", 
   },
 });
