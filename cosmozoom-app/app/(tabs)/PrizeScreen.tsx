@@ -19,6 +19,11 @@ export default function PrizeScreen() {
   const { planet } = useLocalSearchParams();
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
+  const planetOrder = ['earth', 'mars','venus','mercury','jupiter','saturn','uranus','neptune'];
+  const currentIndex = typeof planet === 'string' ? planetOrder.indexOf(planet) : -1;
+
+  const nextPlanet = planetOrder[currentIndex + 1];
+
   useEffect(() => {
     if (planet && typeof planet === 'string') {
       const planetKey = planet.toLowerCase();
@@ -57,16 +62,23 @@ export default function PrizeScreen() {
       style={styles.background}
       resizeMode="cover"
     >
+  
       <TouchableOpacity
         style={styles.topRightButton}
-        onPress={() =>
-          router.replace({
-            pathname: '/quiz',
-            params: { planet },
-          })
+        onPress={() => {
+              if (nextPlanet) {
+            router.replace({
+              pathname: '/kuizu',
+              params: { planet: nextPlanet},
+            });
+          } else{
+            router.replace('/(tabs)/mypage');
+          }
+        }
+      
         }
       >
-        <Text style={styles.greenTopRightText}>もう一回チャレンジ</Text>
+        <Text style={styles.greenTopRightText}>次の惑星のクイズへ</Text>
       </TouchableOpacity>
 
       <View style={styles.container}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -15,8 +15,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import planetAssets from '../constants/planetAssets';
+import * as ScreenOrientation from 'expo-screen-orientation'; // 
+
 
 const { width } = Dimensions.get('window');
+
+const COLS = 3;   // 横に並べる写真の数（3〜5くらいがちょうどよい）
+const GAP = 10;   // 写真ボックスの余白（単位はピクセル）
 
 const allPlanets = [
   'mercury', 'venus', 'earth', 'mars', 'jupiter',
@@ -48,6 +53,16 @@ export default function MyPage() {
   const [orderedGallery, setOrderedGallery] = useState<string[]>([]);
   const router = useRouter();
 
+  useEffect(() => {
+    // マイページ表示時に横向きに固定
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+  
+    return () => {
+      // 他の画面に戻るときは縦向きに戻す（必要であれば）
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    };
+  }, []);
+
   useFocusEffect(
     React.useCallback(() => {
       const loadData = async () => {
@@ -75,6 +90,8 @@ export default function MyPage() {
       loadData();
     }, [])
   );
+
+  
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -113,20 +130,10 @@ export default function MyPage() {
     <Image source={logo} style={styles.logo} resizeMode="contain" />
   </TouchableOpacity>
   <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backText}>ホームへ戻る</Text>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.push("/kuizu")}>
+              <Text style={styles.backText}>クイズへ戻る</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.backButton, { backgroundColor: '#ff4444', marginLeft: 8 }]}
-              onPress={async () => {
-                await AsyncStorage.removeItem('gallery');
-                setOrderedGallery([]);
-                alert('リセット完了！🌍');
-              }}
-            >
-              <Text style={styles.backText}>ギャラリーをリセット</Text>
-            </TouchableOpacity>
+            
           </View>
         </View>
 
@@ -235,6 +242,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 20,
     paddingBottom: 40,
+    paddingHorizontal: 65, // ← ★ 左右に余白（中央寄せ効果）
     flexGrow: 1,
   },
   headerRow: {
@@ -247,7 +255,7 @@ const styles = StyleSheet.create({
   logo: {
     // paddingTop: 40,
     // left: -30,
-    height: 90,
+    height: 0,
     width: 160,
   },
   headerButtons: {
@@ -327,11 +335,12 @@ const styles = StyleSheet.create({
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 48,
+    justifyContent: 'flex-start',
+    gap: GAP,
+    // paddingHorizontal: 20,        // ← 左右に余白を追加（必要に応じて調整）
   },
   photoBox: {
-    width: `${100 / 2 - 2}%`, // приблизно 18% для 5 в ряд
+    width: `${100 / COLS - 2}%`,
     aspectRatio: 1,
     alignItems: 'center',
   },

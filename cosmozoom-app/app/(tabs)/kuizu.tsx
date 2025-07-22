@@ -3,6 +3,9 @@ import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Dimensions, Image, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, } from 'react-native-reanimated';
+import * as ScreenOrientation from 'expo-screen-orientation'; 
+import { useLocalSearchParams  } from 'expo-router';
+
 const { width, height } = Dimensions.get('window');
 const DOT_COUNT = 14;
 const DURATION = 1000;
@@ -311,16 +314,17 @@ const wakusei_kuizu = [
   },
 ];
 const taiyoukei = [
-  { id: 'sun', name: '太陽/sun', img: require('../../assets/images/taiyou.png'), clickable: false, initialPos: { top: '15%', left: '45%' }, size: { width: width * 0.15, height: width * 0.15, borderRadius: (width * 0.4) / 2 } }, 
-  { id: 'mercury', name: '水星/mercury', img: require('../../assets/images/suisei.png'), clickable: true ,  initialPos: { top: '35%', left: '85%' },  size: { width: width * 0.03, height: width * 0.03, borderRadius: (width * 0.07) / 2 }},
-  { id: 'venus', name: '金星/venus', img: require('../../assets/images/kinsei.png'), clickable: true,       initialPos: { top: '42%', left: '78%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.09) / 2 }}, 
-  { id: 'earth', name: '地球/earth', img: require('../../assets/images/tikyuu.png'), clickable: true,       initialPos: { top: '49%', left: '70%' },  size: { width: width * 0.063, height: width * 0.063, borderRadius: (width * 0.11) / 2 }}, 
-  { id: 'mars', name: '火星/mars', img: require('../../assets/images/kasei.png'), clickable: true,          initialPos: { top: '53%', left: '60%' },  size: { width: width * 0.04, height: width * 0.04, borderRadius: (width * 0.09) / 2 } }, 
-  { id: 'jupiter', name: '木星/jupiter', img: require('../../assets/images/mokusei.png'), clickable: true,  initialPos: { top: '50%', left: '47%' }, size: { width: width * 0.074, height: width * 0.074, borderRadius: (width * 0.25) / 2 } }, 
-  { id: 'saturn', name: '土星/saturn', img: require('../../assets/images/dosei.png'), clickable: true,      initialPos: { top: '60%', left: '37%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.6) / 2 }  }, 
-  { id: 'uranus', name: '天王星/uranus', img: require('../../assets/images/tennousei.png'), clickable: true, initialPos: { top: '65%', left: '25%' },  size: { width: width * 0.024, height: width * 0.024, borderRadius: (width * 0.12) / 2 } }, 
-  { id: 'neptune', name: '海王星/neptune', img: require('../../assets/images/kaiousei.png'), clickable: true,initialPos: { top: '67%', left: '15%' }, size: { width: width * 0.025, height: width * 0.025, borderRadius: (width * 0.12) / 2 }}, 
+  { id: 'sun', name: '太陽/sun', img: require('../../assets/images/taiyou.png'), clickable: false, initialPos: { top: '10%', left: '45%' }, size: { width: width * 0.15, height: width * 0.15, borderRadius: (width * 0.4) / 2 } }, 
+  { id: 'mercury', name: '水星/mercury', img: require('../../assets/images/suisei.png'), clickable: true ,  initialPos: { top: '40%', left: '85%' },  size: { width: width * 0.03, height: width * 0.03, borderRadius: (width * 0.07) / 2 }},
+  { id: 'venus', name: '金星/venus', img: require('../../assets/images/kinsei.png'), clickable: true,       initialPos: { top: '47%', left: '78%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.09) / 2 }}, 
+  { id: 'earth', name: '地球/earth', img: require('../../assets/images/tikyuu.png'), clickable: true,       initialPos: { top: '54%', left: '70%' },  size: { width: width * 0.063, height: width * 0.063, borderRadius: (width * 0.11) / 2 }}, 
+  { id: 'mars', name: '火星/mars', img: require('../../assets/images/kasei.png'), clickable: true,          initialPos: { top: '58%', left: '60%' },  size: { width: width * 0.04, height: width * 0.04, borderRadius: (width * 0.09) / 2 } }, 
+  { id: 'jupiter', name: '木星/jupiter', img: require('../../assets/images/mokusei.png'), clickable: true,  initialPos: { top: '55%', left: '47%' }, size: { width: width * 0.074, height: width * 0.074, borderRadius: (width * 0.25) / 2 } }, 
+  { id: 'saturn', name: '土星/saturn', img: require('../../assets/images/dosei.png'), clickable: true,      initialPos: { top: '65%', left: '37%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.6) / 2 }  }, 
+  { id: 'uranus', name: '天王星/uranus', img: require('../../assets/images/tennousei.png'), clickable: true, initialPos: { top: '70%', left: '25%' },  size: { width: width * 0.024, height: width * 0.024, borderRadius: (width * 0.12) / 2 } }, 
+  { id: 'neptune', name: '海王星/neptune', img: require('../../assets/images/kaiousei.png'), clickable: true,initialPos: { top: '72%', left: '15%' }, size: { width: width * 0.025, height: width * 0.025, borderRadius: (width * 0.12) / 2 }},
 ];
+
 const shuffleArray = <T,>(array: T[]): T[] => {
   return [...array].sort(() => Math.random() - 0.5);
 };
@@ -334,6 +338,18 @@ export default function KuizuScreen() {
   const [correctCount, setCorrectCount] = useState(0);
   const [clearedPlanets, setClearedPlanets] = useState<string[]>([]);
   const [pressedPlanetId, setPressedPlanetId] = useState<string | null>(null);
+  
+
+    useEffect(() => {
+    // クイズ画面に入ったら横向きに固定
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+
+    return () => {
+      // 画面から離れたら縦向きに戻す（任意）
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    };
+  }, []);
+  
 
   // shuffledQuizを定義
   const [shuffledQuiz, setShuffledQuiz] = useState<typeof wakusei_kuizu[0] | null>(null);
@@ -355,11 +371,25 @@ useEffect(() => {
     const currentPlanet = shuffledQuiz.id;
 
     if (passedAll && currentPlanet === nextPlanet) {
-      setClearedPlanets((prev) => [...prev, currentPlanet]);
-      router.push({
-        pathname: '/PrizeScreen',
-        params: { planet: currentPlanet }
+      setClearedPlanets((prev) => {
+        if (!prev.includes(currentPlanet)) {
+          return [...prev, currentPlanet];
+        }
+        return prev;
       });
+      setTimeout(() => {
+        setShowQuiz(false);
+        setShuffledQuiz(null);
+        setCurrentQuestionIndex(0);
+        setCorrectCount(0);
+        setIsQuizFinished(false);
+
+        router.push({
+          pathname: '/PrizeScreen',
+          params: { planet: currentPlanret },
+        });
+      }, 800);
+ 
     }
   }
 }, [isQuizFinished, correctCount, shuffledQuiz, nextPlanet]);
@@ -425,7 +455,7 @@ const handlePlanetPress = (planetId: string) => {
           <Text style={styles.retryButtonText}>マイページへ</Text>
           </Pressable>
 
-          <Pressable onPress={() => router.push('/(tabs)')} style={styles.button}>
+          <Pressable onPress={() => router.replace('/home')} style={styles.button}>
             <Text style={styles.buttonText}>ホームへ戻る</Text>
           </Pressable>
           
@@ -447,7 +477,7 @@ const handlePlanetPress = (planetId: string) => {
                     // 各惑星にinitialPosと共通スタイルを適用。太陽だけサイズを上書き。
                     style={[
                       styles.absolutePlanetItem,
-                      { top: item.initialPos.top, left: item.initialPos.left }
+                      { top: item.initialPos.top as any, left: item.initialPos.left as any }
                     ]} >
                     {/* 太陽またはクリア済みの惑星なら画像、それ以外はマスク */}
                     {isSun || cleared ? (
@@ -558,7 +588,7 @@ greenText: {
 logo: {
   position: 'absolute',
   top: 20,
-  left: 20,
+  left: 40,
   height: 90,
   width: 160,
   resizeMode: 'contain',
@@ -635,11 +665,16 @@ logo: {
     color: 'white',
     backgroundColor:"#512C8B",
     fontSize: 24,
-    padding:12,
+    fontWeight: 'bold',
+    padding:5,
     borderRadius:10,
     textAlign: 'center',
     position: 'absolute',
-    top:40,
+    top: "89%",
+
+    textShadowColor: '#FFCC33',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   quizModal: {
     position: 'absolute',
@@ -662,13 +697,13 @@ logo: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 20,
+    gap: 16,
   },
   optionButton: {
     fontWeight:'bold',
   backgroundColor: '#8A8CB5',
-  paddingVertical: 120, // 上下のpadding
-  paddingHorizontal: 70,
+  paddingVertical: 40, // 上下のpadding
+  paddingHorizontal: 40,
   borderRadius: 20,
   alignItems: 'center',
   },

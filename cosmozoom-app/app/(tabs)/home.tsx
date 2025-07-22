@@ -26,6 +26,8 @@ import Animated, {
 import { clamp } from "react-native-redash";
 import Svg, { Ellipse } from "react-native-svg";
 
+
+
 // Dimensions.get("window")で画面サイズを取得し、
 const { width, height } = Dimensions.get("window");
 //SOLAR_WIDTHとSOLAR_HEIGHTで太陽系の表示エリアを決めています。
@@ -209,6 +211,9 @@ export default function HomeScreen() {
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current);
   }, [isPaused]);
+
+  
+  
 
   const centerX = SOLAR_WIDTH / 2;
   const centerY = SOLAR_HEIGHT / 2;
@@ -472,8 +477,8 @@ const styles = StyleSheet.create({
     padding: 10,
     transform: [
       { rotate: "90deg" },
-      { translateX: "-100%" }, // rotate後の位置調整
-      { translateY: "100%" }, // 必要に応じて調整
+      { translateX: "-100%" },
+      { translateY: "100%" }, 
     ],
   },
 
