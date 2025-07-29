@@ -9,45 +9,63 @@ import {
   View,
 } from "react-native";
 import users from "../../assets/user.json";
-import { router } from "expo-router";
+
 
 // Expo Googleログイン用
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import { useRouter } from "expo-router";
+
+
 
 // Firebase認証用
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig"; // 自分のfirebase.ts
+import * as AuthSession from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
+
+import type { User } from "firebase/auth";
 
 export default function InstallScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "212604807081-p7fprclar8jl7af10qe89h2kig7n4fhj.apps.googleusercontent.com", // ← Google Cloud Consoleから取得
-    redirectUri: "https://auth.expo.io/@liupeiyu/cosmozoom-app", // ←ここ重要！
+    clientId: "212604807081-p7fprclar8jl7af10qe89h2kig7n4fhj.apps.googleusercontent.com",
+    redirectUri: "https://auth.expo.io/@liupeiyu/cosmozoom-app",
     scopes: ["openid", "profile", "email"],
+    selectAccount: true,
   });
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { idToken } = response.authentication;
+useEffect(() => {
+  console.log("✅ useEffect内のresponse:", response); 
+
+  if (response?.type === "success") {
+    console.log("🔽 Google認証レスポンス:", JSON.stringify(response, null, 2)); // ← ★ ここを追加
+
+    const idToken = response.authentication?.idToken;
+    if (idToken) {
       const credential = GoogleAuthProvider.credential(idToken);
       signInWithCredential(auth, credential)
         .then((userCredential) => {
           setUser(userCredential.user);
           Alert.alert("Googleログイン成功", `${userCredential.user.displayName} さん`);
-          router.push("/nickname"); // 任意の遷移先に変更
+          router.push("/nickname");
         })
         .catch((error) => {
-          console.error("Firebaseサインイン失敗:", error);
+          console.error("🔥 Firebaseサインイン失敗:", error);
           Alert.alert("Firebaseログイン失敗");
         });
+    } else {
+      Alert.alert("Google認証失敗", "IDトークンが取得できませんでした");
     }
-  }, [response]);
+  }
+}, [response]);
+
+
 
   const handleFakeLogin = () => {
     const foundUser = users.find(
@@ -66,8 +84,11 @@ export default function InstallScreen() {
   };
 
   const handleGoogleLogin = async () => {
-    promptAsync();
+    console.log("🟢 Googleログイン開始"); 
+    const result = await promptAsync(); // ← ✅ これが重要
+    console.log("🔁 promptAsync の結果:", result);
   };
+
 
   return (
     <ImageBackground

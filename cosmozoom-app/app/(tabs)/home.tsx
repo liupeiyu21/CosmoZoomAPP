@@ -25,6 +25,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { clamp } from "react-native-redash";
 import Svg, { Ellipse } from "react-native-svg";
+import { MaterialIcons } from '@expo/vector-icons';
+import { PinchGestureHandlerGestureEvent, PanGestureHandlerGestureEvent } from "react-native-gesture-handler";
 
 
 
@@ -145,7 +147,7 @@ export default function HomeScreen() {
   // useRefフックを使って、アニメーションのリクエストを管理
   const [isPaused, setIsPaused] = useState(false);
   //アニメーションフレームIDの保持。
-  const requestRef = useRef();
+  // const requestRef = useRef(null); ← 削除
 
   // 追加：新たな表示位置を管理するstateを追加
   const [highlightedPlanet, setHighlightedPlanet] = useState(null);
@@ -156,7 +158,7 @@ export default function HomeScreen() {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   //ピンチ操作でscaleを更新。
-  const pinchHandler = useAnimatedGestureHandler({
+  const pinchHandler = useAnimatedGestureHandler<PinchGestureHandlerGestureEvent>({
     onActive: (event) => {
       // scale.value = event.scale;
       scale.value = Math.min(Math.max(event.scale, 1), 2);
@@ -166,7 +168,10 @@ export default function HomeScreen() {
   const MAX_OFFSET_X = width * 0.45;
   const MAX_OFFSET_Y = height * 0.25;
 
-  const panHandler = useAnimatedGestureHandler({
+  const panHandler = useAnimatedGestureHandler<
+  PanGestureHandlerGestureEvent,
+  { startX: number; startY: number }
+>({
     onStart: (_, ctx) => {
       ctx.startX = translateX.value;
       ctx.startY = translateY.value;
@@ -194,6 +199,8 @@ export default function HomeScreen() {
     ],
   }));
 
+  const requestRef = useRef<number | null>(null);
+
   useEffect(() => {
     let lastTime = Date.now();
     const animate = () => {
@@ -209,8 +216,12 @@ export default function HomeScreen() {
     };
 
     requestRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(requestRef.current);
-  }, [isPaused]);
+  return () => {
+    if (requestRef.current !== null) {
+      cancelAnimationFrame(requestRef.current);
+    }
+  };
+}, [isPaused]);
 
   
   
@@ -224,7 +235,7 @@ export default function HomeScreen() {
         setHighlightedPlanet(null);
         setSelectedPlanet(null); 
       }
-        }　>
+        }>
         <View style={styles.container}>
           <Image
             source={require("../../assets/images/login_background.png")}
@@ -239,11 +250,11 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.startButton, { backgroundColor: "#888" }]}
+            style={[styles.startButton, { backgroundColor: "#2B31A4" }]}
             onPress={() => setIsPaused((prev) => !prev)}
           >
             <Text style={styles.startText}>
-              {isPaused ? "再開 ▶︎" : "停止 ⏸"}
+              {isPaused ? "再生 ▶" : "停止 \u200C⏸\u200C"}
             </Text>
           </TouchableOpacity>
 
@@ -375,7 +386,7 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.infoTextBlock}>
                 <Text style={styles.infoText}>
-                  太陽から{selectedPlanet.orbit + 1}番目
+                  太陽から{8 - selectedPlanet.orbit}番目
                 </Text>
                 <Text style={styles.infoText}>
                   大きさ: {planetInfo[selectedPlanet.img]?.size}

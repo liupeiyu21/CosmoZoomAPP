@@ -5,6 +5,8 @@ import { Alert, Dimensions, Image, ImageBackground, Pressable, StyleSheet, Text,
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, } from 'react-native-reanimated';
 import * as ScreenOrientation from 'expo-screen-orientation'; 
 import { useLocalSearchParams  } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const { width, height } = Dimensions.get('window');
 const DOT_COUNT = 14;
@@ -314,7 +316,7 @@ const wakusei_kuizu = [
   },
 ];
 const taiyoukei = [
-  { id: 'sun', name: '太陽/sun', img: require('../../assets/images/taiyou.png'), clickable: false, initialPos: { top: '10%', left: '45%' }, size: { width: width * 0.15, height: width * 0.15, borderRadius: (width * 0.4) / 2 } }, 
+  { id: 'sun', name: '太陽/sun', img: require('../../assets/images/taiyou.png'), clickable: false, initialPos: { top: '10%', left: '45%' }, size: { width: width * 0.18, height: width * 0.18, borderRadius: (width * 0.4) / 2 } }, 
   { id: 'mercury', name: '水星/mercury', img: require('../../assets/images/suisei.png'), clickable: true ,  initialPos: { top: '40%', left: '85%' },  size: { width: width * 0.03, height: width * 0.03, borderRadius: (width * 0.07) / 2 }},
   { id: 'venus', name: '金星/venus', img: require('../../assets/images/kinsei.png'), clickable: true,       initialPos: { top: '47%', left: '78%' }, size: { width: width * 0.06, height: width * 0.06, borderRadius: (width * 0.09) / 2 }}, 
   { id: 'earth', name: '地球/earth', img: require('../../assets/images/tikyuu.png'), clickable: true,       initialPos: { top: '54%', left: '70%' },  size: { width: width * 0.063, height: width * 0.063, borderRadius: (width * 0.11) / 2 }}, 
@@ -366,17 +368,27 @@ export default function KuizuScreen() {
   }, []);
   // クイズ終了時に全問正解していれば惑星をクリア済みにする
 useEffect(() => {
+  const loadClearedPlanets = async () => {
+    const saved = await AsyncStorage.getItem('clearedPlanets');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setClearedPlanets(parsed);
+    }
+  };
+  loadClearedPlanets();
+}, []);
+
+useEffect(() => {
   if (isQuizFinished && shuffledQuiz) {
     const passedAll = correctCount === shuffledQuiz.questions.length;
     const currentPlanet = shuffledQuiz.id;
 
     if (passedAll && currentPlanet === nextPlanet) {
       setClearedPlanets((prev) => {
-        if (!prev.includes(currentPlanet)) {
-          return [...prev, currentPlanet];
-        }
-        return prev;
-      });
+      const updated = [...prev, currentPlanet];
+      AsyncStorage.setItem('clearedPlanets', JSON.stringify(updated));
+      return updated;
+});
       setTimeout(() => {
         setShowQuiz(false);
         setShuffledQuiz(null);
@@ -386,9 +398,9 @@ useEffect(() => {
 
         router.push({
           pathname: '/PrizeScreen',
-          params: { planet: currentPlanret },
+          params: { planet: currentPlanet },
         });
-      }, 800);
+      },);
  
     }
   }

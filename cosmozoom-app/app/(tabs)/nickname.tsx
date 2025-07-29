@@ -10,22 +10,35 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from "expo-router";
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function NicknameScreen() {
-  const { username } = useLocalSearchParams(); // ← install.tsxから受け取る
+  const { username } = useLocalSearchParams(); // install.tsx から受け取る
   const [nickname, setNickname] = useState('');
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    Alert.alert('お知らせ','これから画面が横にまる');
     if (!nickname.trim()) {
       Alert.alert('エラー', 'ニックネームを入力してください');
       return;
     }
-    console.log(`ユーザー: ${username} さんのニックネームは ${nickname} です`);
-    // 🔁 次の画面に遷移したい場合はここで router.push() を使用
-    router.push({
-      pathname: '/home',
-      params: { username, nickname }, // nicknameも渡す
-    });
+
+    try {
+      // ニックネームを AsyncStorage に保存
+      await AsyncStorage.setItem('nickname', nickname);
+
+      console.log(`ユーザー: ${username} さんのニックネームは ${nickname} です`);
+
+      // 次の画面へ遷移
+      router.push({
+        pathname: '/home',
+        params: { username, nickname }, // nickname も渡す
+      });
+
+    } catch (error) {
+      console.error('ニックネーム保存失敗:', error);
+      Alert.alert('エラー', 'ニックネームの保存に失敗しました');
+    }
   };
 
   return (
@@ -41,13 +54,13 @@ export default function NicknameScreen() {
       <TextInput
         style={styles.input}
         placeholder="ニックネームを書いてください"
-        placeholderTextColor="#333"
+        placeholderTextColor="#bbb"
         value={nickname}
         onChangeText={setNickname}
       />
 
       <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextButtonText}>次</Text>
+        <Text style={styles.nextButtonText}>スタート</Text>
       </TouchableOpacity>
     </ImageBackground>
   );
@@ -72,13 +85,14 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#fff',
   
-    width: '60%',
+    width: '70%',
     height: 70,
     paddingHorizontal: 20,
     borderRadius: 16,
     borderWidth: 5,
     borderColor: '#db5c97',
     fontSize: 16,
+   
     fontWeight: 'bold',
     marginBottom: 40,
     textAlign: 'center',

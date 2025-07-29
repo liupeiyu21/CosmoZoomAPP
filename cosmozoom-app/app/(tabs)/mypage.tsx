@@ -163,7 +163,7 @@ export default function MyPage() {
               </>
             ) : (
               <>
-                <Text style={styles.label}>ニックネーム：{nickname || '未設定'}</Text>
+                <Text style={styles.label}>{nickname || '未設定'}</Text>
                 <TouchableOpacity style={styles.greenButton} onPress={() => setEditNick(true)}>
                   <Text style={styles.greenText}>ニックネームを変更</Text>
                 </TouchableOpacity>
